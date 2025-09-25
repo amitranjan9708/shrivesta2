@@ -1,0 +1,20 @@
+@font-face {
+    font-family: 'Maharlika';
+    src: url('./Maharlika-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+
+.hero-carousel {
+    font-family: 'Maharlika', sans-serif;
+  }
+  
+  .hero-carousel h1,
+  .hero-carousel h2,
+  .hero-carousel p,
+  .hero-carousel button {
+    font-family: 'Maharlika', sans-serif;
+  }
+  
