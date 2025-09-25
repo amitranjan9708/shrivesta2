@@ -1,15 +1,23 @@
 import { ShoppingBag, User, Menu, Search } from 'lucide-react';
 import { Button } from './ui/button';
+import React from 'react';
 
 export function Header() {
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <div className="flex items-center">
+
+
+
+          <div className="flex items-center gap-4">
+            <img
+              src="https://i.ibb.co/RksbbB8W/IMG-20250920-WA0003-1.jpg"
+              alt="Logo"
+              className="h-12 w-12 object-cover rounded-full"
+            />
             <div className="text-3xl font-bold bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent tracking-tight">
-              ✨ Shrivesta
+              Shrivesta
             </div>
           </div>
 
