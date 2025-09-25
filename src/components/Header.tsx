@@ -15,7 +15,7 @@ export function Header() {
               className="h-8 w-8 sm:h-12 sm:w-12 object-cover rounded-full"
             />
             <div className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent tracking-tight">
-              Shrivesta
+              ShriVesta
             </div>
           </div>
 
