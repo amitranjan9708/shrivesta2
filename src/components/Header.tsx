@@ -1,6 +1,7 @@
 import { ShoppingBag, User, Menu, Search } from 'lucide-react';
 import { Button } from './ui/button';
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export function Header() {
   return (
@@ -21,10 +22,10 @@ export function Header() {
 
           {/* Navigation - Hidden on mobile */}
           <nav className="hidden md:flex space-x-8">
-            <a href="#collections" className="text-gray-800 hover:text-amber-600 transition-colors">Collections</a>
-            <a href="#occasions" className="text-gray-800 hover:text-amber-600 transition-colors">Occasions</a>
-            <a href="#about" className="text-gray-800 hover:text-amber-600 transition-colors">About</a>
-            <a href="#contact" className="text-gray-800 hover:text-amber-600 transition-colors">Contact</a>
+            <Link to="/collections" className="text-gray-800 hover:text-amber-600 transition-colors">Collections</Link>
+            <Link to="/occasions" className="text-gray-800 hover:text-amber-600 transition-colors">Occasions</Link>
+            <Link to="/about" className="text-gray-800 hover:text-amber-600 transition-colors">About</Link>
+            <Link to="/contact" className="text-gray-800 hover:text-amber-600 transition-colors">Contact</Link>
           </nav>
 
           {/* Right side icons */}
