@@ -1,21 +1,22 @@
 import { ShoppingBag, User, Menu, Search } from 'lucide-react';
 import { Button } from './ui/button';
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export function Header() {
+  const navigate = useNavigate();
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-4" style={{marginRight: '10px'}}>
 
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 cursor-pointer" onClick={() => navigate('/')}>
             <img
               src="https://i.ibb.co/RksbbB8W/IMG-20250920-WA0003-1.jpg"
               alt="Logo"
               className="h-8 w-8 sm:h-12 sm:w-12 object-cover rounded-full"
             />
-            <div className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent tracking-tight">
+            <div className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent tracking-tight" on>
               ShriVesta
             </div>
           </div>
