@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import qrCode from "./qr_code.png";
 import { Instagram, MessageCircle, Phone, Mail, MapPin, Heart } from 'lucide-react';
 
 export function ContactSection() {
@@ -117,13 +118,8 @@ export function ContactSection() {
                 <div className="bg-white p-6 rounded-xl mx-auto w-fit mb-6">
                   <div className="w-40 h-40 bg-black rounded-lg flex items-center justify-center">
                     <div className="text-white text-center">
-                      <div className="grid grid-cols-8 gap-1 w-32 h-32">
-                        {[...Array(64)].map((_, i) => (
-                          <div 
-                            key={i} 
-                            className={`w-2 h-2 ${Math.random() > 0.5 ? 'bg-black' : 'bg-white'}`}
-                          />
-                        ))}
+                      <div className="w-32 h-32">
+                        <img src={qrCode} alt="qr" />
                       </div>
                     </div>
                   </div>
