@@ -6,7 +6,7 @@ import { Occasions } from "./components/Occasions";
 import { FeaturesSection } from "./components/FeaturesSection";
 import { ContactSection } from "./components/ContactSection";
 import Products from "./components/Products";
-import ProductDetailCard from "./components/Productdetailpage";
+import ProductDetailCard from "./components/ProductDetailPage";
 import React from "react";
 
 function HomePage() {
