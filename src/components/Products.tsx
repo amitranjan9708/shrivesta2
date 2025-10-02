@@ -2,7 +2,7 @@ import React from 'react';
 import { ProductCard } from './ui/customcard';
 import { SortDropdown } from "./ui/sortdropdown";
 import { useState, useMemo } from "react";
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 const productList = [
   {
@@ -18,6 +18,7 @@ const productList = [
     rating: 4,
     ratingCount: 93,
     colors: ["#E9EFFF", "#212121", "#9FACDF"],
+    subcategory: "short-kurti"
   },
   {
     imageSrc:
@@ -32,6 +33,7 @@ const productList = [
     rating: 4,
     ratingCount: 93,
     colors: ["#E9EFFF", "#212121", "#9FACDF"],
+    subcategory: "long-kurti"
   },
   {
     imageSrc:
@@ -46,6 +48,7 @@ const productList = [
     rating: 4,
     ratingCount: 93,
     colors: ["#E9EFFF", "#212121", "#9FACDF"],
+    subcategory: "2piece-kurti"
   },
   {
     imageSrc:
@@ -60,6 +63,7 @@ const productList = [
     rating: 4,
     ratingCount: 93,
     colors: ["#E9EFFF", "#212121", "#9FACDF"],
+    subcategory: "3piece-kurti"
   },
   {
     imageSrc:
@@ -74,6 +78,7 @@ const productList = [
     rating: 4,
     ratingCount: 93,
     colors: ["#E9EFFF", "#212121", "#9FACDF"],
+    subcategory: "short-kurti"
   },
   {
     imageSrc:
@@ -88,6 +93,7 @@ const productList = [
     rating: 4,
     ratingCount: 93,
     colors: ["#E9EFFF", "#212121", "#9FACDF"],
+    subcategory: "long-kurti"
   },
   // add more products if needed
 ];
@@ -96,9 +102,17 @@ const Products = () => {
     const [sortOption, setSortOption] = useState<
     "priceLowToHigh" | "priceHighToLow" | "rating"
   >("priceLowToHigh");
+    const [seacrhParams]=useSearchParams();
+    const subcategory = seacrhParams.get("subcategory");
+    const fileteredProducts=useMemo(()=>{
+      if(subcategory){
+        return productList.filter(product=>product.subcategory===subcategory);
+      }
+      return productList;
+    },[subcategory]);
 
   const sortedProducts = useMemo(() => {
-    const productsCopy = [...productList];
+    const productsCopy = [...fileteredProducts];
     if (sortOption === "priceLowToHigh") {
       productsCopy.sort((a, b) => a.vipPrice - b.vipPrice);
     } else if (sortOption === "priceHighToLow") {
@@ -107,7 +121,7 @@ const Products = () => {
       productsCopy.sort((a, b) => b.rating - a.rating);
     }
     return productsCopy;
-  }, [sortOption]);
+  }, [fileteredProducts,sortOption]);
   return (
     <>
       <div className="flex justify-start mb-4 ">

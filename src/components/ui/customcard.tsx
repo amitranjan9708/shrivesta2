@@ -38,7 +38,7 @@ export const ProductCard: React.FC<CardProps> = ({
       <div style={{ padding: '18px' }}>
         <div style={{ fontWeight: 'bold', fontSize: '18px', marginBottom: '6px' }}>{product}</div>
         <div style={{ color: '#888', fontSize: '15px', marginBottom: '4px' }}>{subtitle}</div>
-        <div style={{ color: '#b12704', fontWeight: 600, fontSize: '22px' }}>
+        <div style={{ color: '#FFB300', fontWeight: 600, fontSize: '22px' }}>
           INR {vipPrice.toLocaleString()} <span style={{ color: '#666', fontWeight: 400, fontSize: '16px' }}>({discountPercent}% off)</span>
         </div>
         <div style={{ color: '#737373', fontSize: '15px', marginBottom: '12px' }}>VIP applied</div>

@@ -58,7 +58,7 @@ export default function ProductDetailCard() {
             Men's Modern-Fit Wool Blend Suit Jacket - CLOSE OUT!
           </div>
           <div>
-            <span style={{ color: "#b91c1c", fontWeight: 700, fontSize: 21 }}>INR 12,834.00</span>
+            <span style={{ color: "#FFB300", fontWeight: 700, fontSize: 21 }}>INR 12,834.00</span>
             <span style={{ textDecoration: "line-through", marginLeft: 10, color: "#222", fontSize: 14 }}>
               INR 21,450.00
             </span>
@@ -89,12 +89,12 @@ export default function ProductDetailCard() {
           <button
             style={{
               width: "100%",
-              background: "#b91c1c",
-              color: "#fff",
+              background: "linear-gradient(to right, #f59e0b, #ca8a04)", // amber-500 to yellow-600
+              color: "#000", // text-black
               fontWeight: 600,
               fontSize: 16,
               padding: "12px 0 14px 0",
-              borderRadius: 3,
+              borderRadius: "999px",
               border: "none",
               outline: "none",
               marginTop: 12,

@@ -3,11 +3,13 @@ import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-
+import React from 'react';
+import {useNavigate} from "react-router-dom";
 const collections = [
   {
     id: 1,
     name: "Short Kurti",
+    subcategory: "short-kurti",
     description: "Perfect for casual outings and college wear",
     image: "https://images.unsplash.com/photo-1742800786544-e935375035e3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBrdXJ0aSUyMGNvdHRvbiUyMGRyZXNzfGVufDF8fHx8MTc1ODM2MjM0OXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     price: "₹799 - ₹1,299",
@@ -17,6 +19,7 @@ const collections = [
   {
     id: 2,
     name: "Long Kurti",
+    subcategory: "long-kurti",
     description: "Elegant and graceful for formal occasions",
     image: "https://images.unsplash.com/photo-1669199583373-b9636f3f14c8?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDF8fHxlbnwwfHx8fHw%3D",
     price: "₹1,199 - ₹1,899",
@@ -26,6 +29,7 @@ const collections = [
   {
     id: 3,
     name: "2 Piece Kurti Set",
+    subcategory: "2piece-kurti",
     description: "Kurti with matching bottom for complete look",
     image: "https://images.unsplash.com/photo-1741847639057-b51a25d42892?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8a3VydGl8ZW58MHx8MHx8fDA%3D",
     price: "₹1,599 - ₹2,499",
@@ -35,6 +39,7 @@ const collections = [
   {
     id: 4,
     name: "3 Piece Kurti Set",
+    subcategory: "3piece-kurti",
     description: "Complete ensemble with kurti, bottom & dupatta",
     image: "https://images.unsplash.com/photo-1680506660555-1c225f5da953?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjB3b21hbiUyMGt1cnRpJTIwb2ZmaWNlJTIwd2VhcnxlbnwxfHx8fDE3NTgzNjIzNzJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     price: "₹2,199 - ₹3,499",
@@ -44,6 +49,10 @@ const collections = [
 ];
 
 export function Collections() {
+  const navigate = useNavigate();
+  const handleViewCollection = (subcategory) => {
+    navigate(`/products?subcategory=${subcategory}`);
+  }
   return (
     <section id="collections" className="py-16 bg-gradient-to-br from-rose-50 to-amber-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -121,7 +130,8 @@ export function Collections() {
                   </div>
                   
                   <Button 
-                    className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-black border-0 rounded-full transition-all duration-300 transform hover:scale-105"
+                    onClick={() => handleViewCollection(collection.subcategory)}
+                    className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-black border-0 rounded-full transition-all duration-300 transform hover:scale-105 cursor-pointer"
                   >
                     View Collection
                   </Button>
