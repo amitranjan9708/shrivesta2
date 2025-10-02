@@ -1,6 +1,6 @@
 import React from 'react';
 import { ProductCard } from './ui/customcard';
-import { SortDropdown } from "./ui/SortDropdown";
+import { SortDropdown } from "./ui/sortdropdown";
 import { useState, useMemo } from "react";
 import { Link } from 'react-router-dom';
 
