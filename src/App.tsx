@@ -6,7 +6,8 @@ import { Occasions } from "./components/Occasions";
 import { FeaturesSection } from "./components/FeaturesSection";
 import { ContactSection } from "./components/ContactSection";
 import Products from "./components/Products";
-import Productdetailpage from "./components/Productdetailpage";
+import ProductDetailPage from "./components/Productdetailpage";
+import React from "react";
 
 function HomePage() {
   return (
@@ -34,7 +35,7 @@ export default function App() {
           <Route path="/products" element={<Products />} />
           {/* 404 page fallback */}
           <Route path="*" element={<h1 className="text-center mt-10">Page Not Found</h1>} />
-          <Route path="/products/:id" element={<Productdetailpage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
         </Routes>
         <ContactSection />
       </div>

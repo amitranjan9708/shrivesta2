@@ -4,6 +4,7 @@ import { Card, CardContent } from './ui/card';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import qrCode from "./qr_code.png";
 import { Instagram, MessageCircle, Phone, Mail, MapPin, Heart } from 'lucide-react';
+import React from 'react';
 
 export function ContactSection() {
   return (
