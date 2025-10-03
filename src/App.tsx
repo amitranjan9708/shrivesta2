@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { Header } from "./components/Header";
 import { HeroCarousel } from "./components/HeroCarousel";
 import { Collections } from "./components/Collections";
@@ -8,7 +8,7 @@ import { ContactSection } from "./components/ContactSection";
 import Products from "./components/Products";
 import ProductDetailCard from "./components/ProductDetailPage";
 import { CartPage } from "./components/CartPage";
-import React from "react";
+import React, { useEffect } from "react";
 import { Login } from "./components/Login";
 import { Signup } from "./components/Signup";
 import { AccountDashboard } from "./components/AccountInfo";
@@ -26,10 +26,19 @@ function HomePage() {
   );
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, [pathname]);
+  return null;
+}
+
 export default function App() {
   return (
     <Router>
       <div className="min-h-screen bg-white">
+        <ScrollToTop />
         <Header />
         <Routes>
           <Route path="/" element={<HomePage />} />
