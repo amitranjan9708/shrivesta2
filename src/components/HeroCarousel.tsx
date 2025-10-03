@@ -8,6 +8,14 @@ import './HeroCarousel.css';
 // Hero slides data
 const heroSlides = [
   {
+    id: 0,
+    image: "https://bighello.in/cdn/shop/files/FESTIVE_GROUP.png?v=1759467328&width=1920",
+    title: "           ",
+    subtitle: "           ",
+    description: "                             ",
+    cta: "Shop Collection"
+  },
+  {
     id: 1,
     image: "https://images.unsplash.com/photo-1603252109303-2751441dd157?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80",
     title: "Pure Cotton Elegance",
@@ -40,7 +48,7 @@ export function HeroCarousel() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 5000);
+    }, 10000);
     return () => clearInterval(timer);
   }, []);
 
@@ -48,7 +56,7 @@ export function HeroCarousel() {
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
 
   return (
-    <div className="hero-carousel" style={{ position: 'relative', height: '70vh', overflow: 'hidden', background: 'linear-gradient(to bottom right, #FFFBEB, #FFF1F2)' }}>
+    <div className="hero-carousel" style={{ position: 'relative', height: '80vh', overflow: 'hidden', background: 'linear-gradient(to bottom right, #FFFBEB, #FFF1F2)' }}>
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSlide}
@@ -76,12 +84,7 @@ export function HeroCarousel() {
                   transition={{ delay: 0.2, duration: 0.6 }}
                   style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'white' }}>
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} style={{ height: 20, width: 20, fill: '#F59E0B' }} />
-                    ))}
-                    <span style={{ marginLeft: '8px', fontWeight: 500 }}>Trusted by thousands</span>
-                  </div>
+                  
 
                   <h1 style={{ fontSize: '4rem', fontWeight: 900, color: 'white', marginBottom: '16px', lineHeight: 1 }}>
                     {heroSlides[currentSlide].title}

@@ -1,12 +1,47 @@
 import { ShoppingBag, User, Menu, Search } from 'lucide-react';
 import { Button } from './ui/button';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export function Header() {
+  const [bannerIndex, setBannerIndex] = useState(0);
+  const announcements = [
+    'Extra 10% OFF with code SHRI10',
+    'Free shipping on orders over ₹5,000',
+    'New Festive Arrivals — Shop Now',
+  ];
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setBannerIndex((i) => (i + 1) % announcements.length);
+    }, 3500);
+    return () => clearInterval(t);
+  }, []);
+
   const navigate = useNavigate();
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
+      {/* Thin rotating announcement bar */}
+      <div className="w-full bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-400 text-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="h-8 sm:h-9 flex items-center justify-center overflow-hidden">
+            <div className="relative w-full text-center">
+              {announcements.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${
+                    i === bannerIndex ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  <span className="text-xs sm:text-sm font-medium tracking-wide">
+                    {msg}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-4" style={{marginRight: '10px'}}>
 
