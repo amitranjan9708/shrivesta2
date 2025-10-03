@@ -11,9 +11,6 @@ import { CartPage } from "./components/CartPage";
 import React from "react";
 import { Login } from "./components/Login";
 import { Signup } from "./components/Signup";
-import { ForgotPassword } from "./components/ForgotPassword";
-import { ResetPassword } from "./components/ResetPassword";
-import { EnterOtp } from "./components/EnterOtp";
 import { AccountDashboard } from "./components/AccountInfo";
 
 
