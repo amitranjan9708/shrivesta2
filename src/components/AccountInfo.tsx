@@ -76,30 +76,26 @@ const Container = styled.div`
 `;
 
 const Sidebar = styled.div`
-  width: 100%;
-  display: flex;
-  overflow-x: auto;
+  width: 250px;
   background: #fff3cd;
-  padding: 10px 0;
-  gap: 10px;
-  align-items: center;
-  justify-content: space-around;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
 
   h2 {
-    display: none;
+    margin-bottom: 15px;
+    color: #f59e0b;
   }
 
-  @media(min-width: 768px) {
-    width: 250px;
-    flex-direction: column;
-    padding: 20px;
-    gap: 15px;
-    align-items: flex-start;
+  @media(max-width: 768px) {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 10px 0;
+    gap: 8px;
 
     h2 {
-      display: block;
-      margin-bottom: 20px;
-      color: #f59e0b;
+      display: none;
     }
   }
 `;
@@ -107,24 +103,29 @@ const Sidebar = styled.div`
 const SidebarButton = styled.button`
   background: none;
   border: none;
-  text-align: center;
-  font-size: 14px;
+  text-align: left;
+  font-size: 16px;
   color: #333;
   cursor: pointer;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-radius: 8px;
-  white-space: nowrap;
+  width: 100%;
+  margin-bottom: 8px;
 
   &:hover {
     background: #ffe8a1;
   }
 
-  @media(min-width: 768px) {
-    text-align: left;
-    font-size: 16px;
-    width: 100%;
+  @media(max-width: 768px) {
+    text-align: center;
+    margin-bottom: 0;
+    white-space: nowrap;
+    padding: 8px 12px;
   }
 `;
+
+
+
 
 const Main = styled.div`
   flex: 1;
