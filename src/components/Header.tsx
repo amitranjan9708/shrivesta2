@@ -34,9 +34,11 @@ export function Header() {
             <Button variant="ghost" size="icon" className="hover:bg-amber-50 h-8 w-8 sm:h-10 sm:w-10">
               <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
             </Button>
-            <Button variant="ghost" size="icon" className="hover:bg-amber-50 h-8 w-8 sm:h-10 sm:w-10">
-              <User className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
-            </Button>
+            <Link to="/account">
+              <Button variant="ghost" size="icon" className="hover:bg-amber-50 h-8 w-8 sm:h-10 sm:w-10">
+                <User className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
+              </Button>
+            </Link>
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="hover:bg-amber-50 relative h-8 w-8 sm:h-10 sm:w-10">
                 <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />

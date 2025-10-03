@@ -9,6 +9,13 @@ import Products from "./components/Products";
 import ProductDetailCard from "./components/ProductDetailPage";
 import { CartPage } from "./components/CartPage";
 import React from "react";
+import { Login } from "./components/Login";
+import { Signup } from "./components/Signup";
+import { ForgotPassword } from "./components/ForgotPassword";
+import { ResetPassword } from "./components/ResetPassword";
+import { EnterOtp } from "./components/EnterOtp";
+import { AccountDashboard } from "./components/AccountInfo";
+
 
 function HomePage() {
   return (
@@ -35,6 +42,11 @@ export default function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:id" element={<ProductDetailCard />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/account" element={<AccountDashboard />} />
+          
           {/* 404 page fallback */}
           <Route path="*" element={<h1 className="text-center mt-10">Page Not Found</h1>} />
         </Routes>
