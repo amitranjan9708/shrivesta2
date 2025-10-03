@@ -41,7 +41,6 @@ export default function App() {
           <Route path="/products/:id" element={<ProductDetailCard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/account" element={<AccountDashboard />} />
           
           {/* 404 page fallback */}
