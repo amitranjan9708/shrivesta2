@@ -7,7 +7,6 @@ import { User, Mail, ArrowLeft } from 'lucide-react';
 export function AccountDashboard() {
   const navigate = useNavigate();
 
-  // Mock user data
   const [user, setUser] = useState({
     name: 'John Doe',
     email: 'john@example.com',
@@ -42,7 +41,6 @@ export function AccountDashboard() {
           <EditButton onClick={() => navigate('/account/edit')}>Edit Account</EditButton>
         </UserInfoCard>
 
-        {/* Sections */}
         <Section>
           <SectionTitle>Orders</SectionTitle>
           <p>View your past orders and track current orders.</p>
@@ -70,47 +68,83 @@ const Container = styled.div`
   display: flex;
   min-height: 100vh;
   background: linear-gradient(to bottom right, #fff8dc, #fffacd, #ffdab9);
+  flex-direction: column;
+
+  @media(min-width: 768px) {
+    flex-direction: row;
+  }
 `;
 
 const Sidebar = styled.div`
-  width: 250px;
-  background: #fff3cd;
-  padding: 20px;
+  width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 15px;
+  overflow-x: auto;
+  background: #fff3cd;
+  padding: 10px 0;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-around;
 
   h2 {
-    margin-bottom: 20px;
-    color: #f59e0b;
+    display: none;
+  }
+
+  @media(min-width: 768px) {
+    width: 250px;
+    flex-direction: column;
+    padding: 20px;
+    gap: 15px;
+    align-items: flex-start;
+
+    h2 {
+      display: block;
+      margin-bottom: 20px;
+      color: #f59e0b;
+    }
   }
 `;
 
 const SidebarButton = styled.button`
   background: none;
   border: none;
-  text-align: left;
-  font-size: 16px;
+  text-align: center;
+  font-size: 14px;
   color: #333;
   cursor: pointer;
-  padding: 10px;
+  padding: 10px 12px;
   border-radius: 8px;
+  white-space: nowrap;
 
   &:hover {
     background: #ffe8a1;
+  }
+
+  @media(min-width: 768px) {
+    text-align: left;
+    font-size: 16px;
+    width: 100%;
   }
 `;
 
 const Main = styled.div`
   flex: 1;
-  padding: 40px;
+  padding: 20px;
+
+  @media(min-width: 768px) {
+    padding: 40px;
+  }
 `;
 
 const Header = styled.div`
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 
   h1 {
-    font-size: 32px;
+    font-size: 28px;
+
+    @media(min-width: 768px) {
+      font-size: 32px;
+    }
+
     background: linear-gradient(to right, #f59e0b, #facc15);
     -webkit-background-clip: text;
     color: transparent;
@@ -119,30 +153,55 @@ const Header = styled.div`
 
 const UserInfoCard = styled.div`
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   background: white;
   padding: 20px;
   border-radius: 15px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+
+  @media(min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 30px;
+  }
 `;
 
 const UserIcon = styled.div`
-  margin-right: 20px;
+  margin-bottom: 10px;
   color: #f59e0b;
+
+  @media(min-width: 768px) {
+    margin-bottom: 0;
+    margin-right: 20px;
+  }
 `;
 
 const Info = styled.div`
   flex: 1;
+  margin-bottom: 10px;
+
+  @media(min-width: 768px) {
+    margin-bottom: 0;
+  }
 `;
 
 const Name = styled.h2`
-  font-size: 20px;
+  font-size: 18px;
+
+  @media(min-width: 768px) {
+    font-size: 20px;
+  }
   margin-bottom: 5px;
 `;
 
 const Email = styled.p`
-  font-size: 14px;
+  font-size: 12px;
+
+  @media(min-width: 768px) {
+    font-size: 14px;
+  }
   color: #555;
 `;
 
@@ -150,38 +209,60 @@ const EditButton = styled.button`
   background: linear-gradient(to right, #f59e0b, #facc15);
   color: white;
   border: none;
-  padding: 10px 15px;
+  padding: 8px 12px;
   border-radius: 10px;
   cursor: pointer;
+  font-size: 14px;
 
   &:hover {
     opacity: 0.9;
+  }
+
+  @media(min-width: 768px) {
+    font-size: 16px;
+    padding: 10px 15px;
   }
 `;
 
 const Section = styled.div`
   background: white;
-  padding: 20px;
+  padding: 15px;
   border-radius: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+
+  @media(min-width: 768px) {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
 `;
 
 const SectionTitle = styled.h3`
-  font-size: 18px;
-  margin-bottom: 10px;
+  font-size: 16px;
+  margin-bottom: 5px;
+
+  @media(min-width: 768px) {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
 `;
 
 const SectionButton = styled.button`
-  margin-top: 10px;
+  margin-top: 8px;
   background: linear-gradient(to right, #f59e0b, #facc15);
   color: white;
   border: none;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 8px;
   cursor: pointer;
+  font-size: 14px;
 
   &:hover {
     opacity: 0.9;
+  }
+
+  @media(min-width: 768px) {
+    padding: 8px 12px;
+    font-size: 14px;
   }
 `;
