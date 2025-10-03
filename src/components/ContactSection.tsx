@@ -5,6 +5,7 @@ import { Card, CardContent } from './ui/card';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import qrCode from "./qr_code.png";
 import { Instagram, MessageCircle, Phone, Mail, MapPin, Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 
 export function ContactSection() {
@@ -146,7 +147,7 @@ export function ContactSection() {
           </motion.div>
         </div>
 
-        {/* Bottom section with animated heart */}
+        {/* Bottom section with auth test buttons + animated heart */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -154,6 +155,18 @@ export function ContactSection() {
           viewport={{ once: true }}
           className="mt-16 text-center border-t border-amber-400/30 pt-8"
         >
+          <div className="mb-6 flex items-center justify-center gap-4">
+            <Link to="/login">
+              <Button className="px-6 py-2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-black hover:from-amber-600 hover:to-yellow-600">
+                Login
+              </Button>
+            </Link>
+            <Link to="/signup">
+              <Button variant="outline" className="px-6 py-2 rounded-full border border-amber-300 text-amber-200 hover:bg-amber-50/10">
+                Signup
+              </Button>
+            </Link>
+          </div>
           <div className="flex items-center justify-center space-x-2 text-gray-300">
             <span>Made with</span>
             <motion.div
