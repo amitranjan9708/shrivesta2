@@ -9,6 +9,14 @@ import './HeroCarousel.css';
 const heroSlides = [
   {
     id: 0,
+    image: "https://bighello.in/cdn/shop/files/BANNERS_FOR_WEBSITE-03.png?v=1759460333&width=1920",
+    title: "           ",
+    subtitle: "           ",
+    description: "                             ",
+    cta: "Shop Collection"
+  },
+  {
+    id: 1,
     image: "https://bighello.in/cdn/shop/files/FESTIVE_GROUP.png?v=1759467328&width=1920",
     title: "           ",
     subtitle: "           ",
@@ -48,7 +56,7 @@ export function HeroCarousel() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 10000);
+    }, 50000);
     return () => clearInterval(timer);
   }, []);
 
