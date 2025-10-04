@@ -9,30 +9,48 @@ import './HeroCarousel.css';
 const heroSlides = [
   {
     id: 0,
+    image: "https://byshree.com/cdn/shop/videos/c/vp/c0daffca2afc40d6a437ebc99a0dfbc8/c0daffca2afc40d6a437ebc99a0dfbc8.HD-1080p-7.2Mbps-57722323.mp4?v=0",
+    title: `\u00A0`,
+    subtitle: `\u00A0`,
+    description: `\u00A0`,
+    cta: "Shop Collection"
+  },
+  {
+    id: 1,
     image: "https://bighello.in/cdn/shop/files/BANNERS_FOR_WEBSITE-03.png?v=1759460333&width=1920",
-    title: "           ",
-    subtitle: "           ",
-    description: "                             ",
+    title: `\u00A0`,
+    subtitle: `\u00A0`,
+    description: `\u00A0`,
     cta: "Shop Collection"
   },
   {
-    id: 1,
+    id: 2,
     image: "https://bighello.in/cdn/shop/files/FESTIVE_GROUP.png?v=1759467328&width=1920",
-    title: "           ",
-    subtitle: "           ",
-    description: "                             ",
+    title: `\u00A0`,
+    subtitle: `\u00A0`,
+    description: `\u00A0`,
     cta: "Shop Collection"
   },
   {
-    id: 1,
+    id: 3,
+    image: "https://i.ibb.co/wr6Sd30Y/Untitled-1.jpg",
+    title: `\u00A0`,
+    subtitle: `\u00A0`,
+    description: `\u00A0`,
+    cta: "Shop Collection"
+
+  },
+  {
+    id: 4,
     image: "https://images.unsplash.com/photo-1603252109303-2751441dd157?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80",
     title: "Pure Cotton Elegance",
     subtitle: "Discover comfort meets style",
     description: "Lightweight, breathable cotton kurtis perfect for every occasion",
     cta: "Shop Collection"
   },
+
   {
-    id: 2,
+    id: 5,
     image: "https://images.unsplash.com/photo-1717585679395-bbe39b5fb6bc?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     title: "Royal Rajasthani Touch",
     subtitle: "Heritage meets modernity",
@@ -40,7 +58,7 @@ const heroSlides = [
     cta: "Explore Now"
   },
   {
-    id: 3,
+    id: 6,
     image: "https://images.unsplash.com/photo-1697685070059-4b8d49125af1?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     title: "Office to Evening",
     subtitle: "Versatile & Classy",
@@ -56,12 +74,15 @@ export function HeroCarousel() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    },10000);
+    },15000);
     return () => clearInterval(timer);
   }, []);
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+
+  const current = heroSlides[currentSlide];
+  const isVideo = /\.(mp4|webm|ogg)(\?|$)/i.test(current.image);
 
   return (
     <div className="hero-carousel" style={{ position: 'relative', height: '80vh', overflow: 'hidden', background: 'linear-gradient(to bottom right, #FFFBEB, #FFF1F2)' }}>
@@ -76,11 +97,23 @@ export function HeroCarousel() {
         >
           <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
             <div style={{ position: 'absolute', inset: 0 }}>
-              <ImageWithFallback
-                src={heroSlides[currentSlide].image}
-                alt={heroSlides[currentSlide].title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+              {isVideo ? (
+                <video
+                  src={current.image}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              ) : (
+                <ImageWithFallback
+                  src={current.image}
+                  alt={current.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              )}
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0.3), transparent)' }} />
             </div>
 
@@ -105,10 +138,10 @@ export function HeroCarousel() {
                   <p style={{ fontSize: '1.25rem', color: '#F3F4F6', marginBottom: '24px', lineHeight: 1.6 }}>
                     {heroSlides[currentSlide].description}
                   </p>
-
+                  { !isVideo && (
                   <Button style={{ background: 'linear-gradient(to right, #F59E0B, #FBBF24)', color: '#000', padding: '16px 32px', borderRadius: '9999px', fontSize: '1.125rem', fontWeight: 500, cursor: 'pointer', transition: 'all 0.3s', boxShadow: '0 10px 15px rgba(0,0,0,0.2)' }}>
                     {heroSlides[currentSlide].cta}
-                  </Button>
+                  </Button>)}
                 </motion.div>
               </div>
             </div>
