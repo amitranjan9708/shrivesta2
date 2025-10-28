@@ -1,70 +1,109 @@
-import React from 'react';
+import React, { useState } from "react";
 
 type CardProps = {
-  imageSrc: string;
   product: string;
   subtitle: string;
-  oldPrice: number;
-  vipPrice: number;
-  salePrice: number;
-  discountPercent: number;
-  rating: number;
-  ratingCount: number;
-  colors: string[];
+  oldPrice?: number; // optional
+  salePrice?: number; // optional
+  rating?: number;
+  ratingCount?: number;
+  imageUrls?: string[];
 };
 
+
 export const ProductCard: React.FC<CardProps> = ({
-  imageSrc,
   product,
   subtitle,
   oldPrice,
-  vipPrice,
   salePrice,
-  discountPercent,
-  rating,
-  ratingCount,
-  colors,
+  rating = 0,
+  ratingCount = 0,
+  imageUrls = [],
 }) => {
+  const [hovered, setHovered] = useState(false);
+  const mainImage = imageUrls?.[0] || "/placeholder-image.jpg";
+  const hoverImage = imageUrls?.[1] || mainImage;
+  console.log(imageUrls);
+
   return (
-    <div style={{
-      maxWidth: '380px',
-      fontFamily: 'Maharlika, sans-serif',
-      background: '#fff',
-      borderRadius: '0px',
-      overflow: 'hidden',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-    }}>
-      <img src={imageSrc} alt={product} style={{ width: '100%', height: 'auto' }} />
-      <div style={{ padding: '18px' }}>
-        <div style={{ fontWeight: 'bold', fontSize: '18px', marginBottom: '6px' }}>{product}</div>
-        <div style={{ color: '#888', fontSize: '15px', marginBottom: '4px' }}>{subtitle}</div>
-        <div style={{ color: '#FFB300', fontWeight: 600, fontSize: '22px' }}>
-          INR {vipPrice.toLocaleString()} <span style={{ color: '#666', fontWeight: 400, fontSize: '16px' }}>({discountPercent}% off)</span>
+    <div
+      style={{
+        width: "280px",
+        background: "#fff",
+        borderRadius: "12px",
+        overflow: "hidden",
+        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+        cursor: "pointer",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Image section */}
+      <div style={{ position: "relative", width: "100%", height: "320px" }}>
+        <img
+          src={hovered ? hoverImage : mainImage}
+          alt={product}
+          loading="eager"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            transition: "opacity 0.3s ease-in-out",
+          }}
+        />
+      </div>
+
+      {/* Info section */}
+      <div style={{ padding: "14px 16px" }}>
+        <div
+          style={{
+            fontWeight: 700,
+            fontSize: "18px",
+            color: "#222",
+            marginBottom: "6px",
+          }}
+        >
+          {product}
         </div>
-        <div style={{ color: '#737373', fontSize: '15px', marginBottom: '12px' }}>VIP applied</div>
-        <div style={{ fontSize: '15px', color: '#222', marginBottom: '8px' }}>
-          Sale INR {salePrice.toLocaleString()} <span style={{ textDecoration: 'line-through', color: '#828282', fontSize: '14px', marginLeft: '3px' }}>INR {oldPrice.toLocaleString()}</span>
+        <div
+          style={{
+            color: "#666",
+            fontSize: "14px",
+            marginBottom: "10px",
+          }}
+        >
+          {subtitle}
         </div>
-        <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-          {'★'.repeat(Math.floor(rating))}
-          {'☆'.repeat(5 - Math.floor(rating))}
-          <span style={{ marginLeft: '7px', color: '#888', fontSize: '14px' }}>({ratingCount})</span>
-        </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          {colors.map((color, idx) =>
-            <span key={idx} style={{
-              display: 'inline-block',
-              width: '28px',
-              height: '28px',
-              borderRadius: '50%',
-              border: '2px solid #ddd',
-              background: color,
-              cursor: 'pointer'
-            }} />
+
+        {/* Pricing */}
+        <div style={{ marginBottom: "10px" }}>
+          <span style={{ fontWeight: 600, fontSize: "17px", color: "#e67e22" }}>
+            ₹{salePrice ? salePrice.toLocaleString() : "—"}
+          </span>
+          {oldPrice && (
+            <span
+              style={{
+                textDecoration: "line-through",
+                color: "#999",
+                fontSize: "14px",
+                marginLeft: "8px",
+              }}
+            >
+              ₹{oldPrice.toLocaleString()}
+            </span>
           )}
+        </div>
+
+        {/* Rating */}
+        <div style={{ display: "flex", alignItems: "center", fontSize: "15px" }}>
+          <span style={{ color: "#FFD700", marginRight: "6px" }}>
+            {"★".repeat(Math.floor(rating))}
+            {"☆".repeat(5 - Math.floor(rating))}
+          </span>
+          <span style={{ color: "#777" }}>({ratingCount})</span>
         </div>
       </div>
     </div>
   );
 };
-

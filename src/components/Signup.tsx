@@ -1,18 +1,36 @@
 // Signup.tsx
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, User, ArrowLeft } from 'lucide-react';
-import styled from 'styled-components';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Mail, Lock, User, ArrowLeft } from "lucide-react";
+import styled from "styled-components";
+import { useAuth } from "../contexts/AuthContext";
 
 export function Signup() {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { register } = useAuth();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/login');
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const result = await register(name, email, password);
+      if (result.success) {
+        navigate("/login");
+      } else {
+        setError(result.error || "Registration failed");
+      }
+    } catch (error) {
+      setError("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -24,7 +42,7 @@ export function Signup() {
           alt="Fashion collage"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).src =
-              'https://images.unsplash.com/photo-1603252109303-2751441dd157?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80';
+              "https://images.unsplash.com/photo-1603252109303-2751441dd157?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
           }}
         />
       </LeftImage>
@@ -42,6 +60,8 @@ export function Signup() {
           <Subtitle>Join ShriVesta and start shopping</Subtitle>
 
           <Form onSubmit={handleSubmit}>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+
             <InputGroup>
               <label>Full Name</label>
               <InputWrapper>
@@ -52,6 +72,7 @@ export function Signup() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="John Doe"
                   required
+                  disabled={isLoading}
                 />
               </InputWrapper>
             </InputGroup>
@@ -66,6 +87,7 @@ export function Signup() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
+                  disabled={isLoading}
                 />
               </InputWrapper>
             </InputGroup>
@@ -80,15 +102,19 @@ export function Signup() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
+                  disabled={isLoading}
                 />
               </InputWrapper>
             </InputGroup>
 
-            <SubmitButton type="submit">Create Account</SubmitButton>
+            <SubmitButton type="submit" disabled={isLoading}>
+              {isLoading ? "Creating Account..." : "Create Account"}
+            </SubmitButton>
           </Form>
 
           <SignupText>
-            Already have an account? <StyledLink to="/login">Sign in</StyledLink>
+            Already have an account?{" "}
+            <StyledLink to="/login">Sign in</StyledLink>
           </SignupText>
         </FormCard>
       </RightForm>
@@ -247,4 +273,14 @@ const StyledLink = styled(Link)`
   &:hover {
     color: #facc15;
   }
+`;
+
+const ErrorMessage = styled.div`
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid #fecaca;
 `;

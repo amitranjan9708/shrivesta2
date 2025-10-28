@@ -1,26 +1,43 @@
 // Login.tsx
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, ArrowLeft } from 'lucide-react';
-import styled from 'styled-components';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Mail, Lock, ArrowLeft } from "lucide-react";
+import styled from "styled-components";
+import { useAuth } from "../contexts/AuthContext";
 
 export function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   // States
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [forgotPassword, setForgotPassword] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Handlers
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add login logic here
-    navigate('/');
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const result = await login(email, password);
+      if (result.success) {
+        navigate("/");
+      } else {
+        setError(result.error || "Login failed");
+      }
+    } catch (error) {
+      setError("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSendOtp = () => {
@@ -34,9 +51,9 @@ export function Login() {
     alert(`Password for ${email} reset successfully!`);
     setForgotPassword(false);
     setOtpSent(false);
-    setEmail('');
-    setOtp('');
-    setNewPassword('');
+    setEmail("");
+    setOtp("");
+    setNewPassword("");
   };
 
   return (
@@ -47,7 +64,7 @@ export function Login() {
           alt="Fashion collage"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).src =
-              'https://images.unsplash.com/photo-1717585679395-bbe39b5fb6bc?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.1.0';
+              "https://images.unsplash.com/photo-1717585679395-bbe39b5fb6bc?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.1.0";
           }}
         />
       </LeftImage>
@@ -55,19 +72,27 @@ export function Login() {
       <RightForm>
         <LoginCard>
           <Header>
-            <h1>{forgotPassword ? 'Reset Password' : 'Welcome Back'}</h1>
+            <h1>{forgotPassword ? "Reset Password" : "Welcome Back"}</h1>
             <BackButton onClick={() => navigate(-1)}>
               <ArrowLeft /> Back
             </BackButton>
           </Header>
 
-          {!forgotPassword && <Subtitle>Sign in to continue to ShriVesta</Subtitle>}
-          {forgotPassword && !otpSent && <Subtitle>Enter your registered email to receive OTP</Subtitle>}
-          {forgotPassword && otpSent && <Subtitle>Enter OTP and new password</Subtitle>}
+          {!forgotPassword && (
+            <Subtitle>Sign in to continue to ShriVesta</Subtitle>
+          )}
+          {forgotPassword && !otpSent && (
+            <Subtitle>Enter your registered email to receive OTP</Subtitle>
+          )}
+          {forgotPassword && otpSent && (
+            <Subtitle>Enter OTP and new password</Subtitle>
+          )}
 
           {/* Login Form */}
           {!forgotPassword && (
             <Form onSubmit={handleLoginSubmit}>
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+
               <InputGroup>
                 <label>Email</label>
                 <InputWrapper>
@@ -78,6 +103,7 @@ export function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     required
+                    disabled={isLoading}
                   />
                 </InputWrapper>
               </InputGroup>
@@ -87,28 +113,35 @@ export function Login() {
                 <InputWrapper>
                   <LockIcon />
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
+                    disabled={isLoading}
                   />
-                  <ShowHideButton onClick={() => setShowPassword((v) => !v)}>
-                    {showPassword ? 'Hide' : 'Show'}
+                  <ShowHideButton
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    disabled={isLoading}
+                  >
+                    {showPassword ? "Hide" : "Show"}
                   </ShowHideButton>
                 </InputWrapper>
               </InputGroup>
 
               <FormFooter>
                 <label>
-                  <input type="checkbox" /> Remember me
+                  <input type="checkbox" disabled={isLoading} /> Remember me
                 </label>
                 <ForgotPasswordLink onClick={() => setForgotPassword(true)}>
                   Forgot password?
                 </ForgotPasswordLink>
               </FormFooter>
 
-              <SubmitButton type="submit">Sign In</SubmitButton>
+              <SubmitButton type="submit" disabled={isLoading}>
+                {isLoading ? "Signing In..." : "Sign In"}
+              </SubmitButton>
             </Form>
           )}
 
@@ -131,7 +164,9 @@ export function Login() {
               <SubmitButton type="button" onClick={handleSendOtp}>
                 Send OTP
               </SubmitButton>
-              <BackToLogin onClick={() => setForgotPassword(false)}>Back to Login</BackToLogin>
+              <BackToLogin onClick={() => setForgotPassword(false)}>
+                Back to Login
+              </BackToLogin>
             </Form>
           )}
 
@@ -155,14 +190,14 @@ export function Login() {
                 <label>New Password</label>
                 <InputWrapper>
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="••••••••"
                     required
                   />
                   <ShowHideButton onClick={() => setShowPassword((v) => !v)}>
-                    {showPassword ? 'Hide' : 'Show'}
+                    {showPassword ? "Hide" : "Show"}
                   </ShowHideButton>
                 </InputWrapper>
               </InputGroup>
@@ -170,13 +205,16 @@ export function Login() {
               <SubmitButton type="button" onClick={handleResetPassword}>
                 Reset Password
               </SubmitButton>
-              <BackToLogin onClick={() => setForgotPassword(false)}>Back to Login</BackToLogin>
+              <BackToLogin onClick={() => setForgotPassword(false)}>
+                Back to Login
+              </BackToLogin>
             </Form>
           )}
 
           {!forgotPassword && (
             <SignupText>
-              Don&apos;t have an account? <StyledLink to="/signup">Create one</StyledLink>
+              Don&apos;t have an account?{" "}
+              <StyledLink to="/signup">Create one</StyledLink>
             </SignupText>
           )}
         </LoginCard>
@@ -191,7 +229,7 @@ const Container = styled.div`
   min-height: 100vh;
   flex-direction: column;
 
-  @media(min-width: 768px) {
+  @media (min-width: 768px) {
     flex-direction: row;
   }
 `;
@@ -200,7 +238,7 @@ const LeftImage = styled.div`
   display: none;
   flex: 1;
 
-  @media(min-width: 768px) {
+  @media (min-width: 768px) {
     display: block;
   }
 
@@ -226,7 +264,7 @@ const LoginCard = styled.div`
   background: white;
   padding: 40px;
   border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -322,7 +360,7 @@ const FormFooter = styled.div`
   align-items: center;
   font-size: 12px;
 
-  input[type='checkbox'] {
+  input[type="checkbox"] {
     margin-right: 5px;
   }
 `;
@@ -372,4 +410,14 @@ const StyledLink = styled(Link)`
   &:hover {
     color: #facc15;
   }
+`;
+
+const ErrorMessage = styled.div`
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid #fecaca;
 `;
