@@ -1,12 +1,13 @@
 // Login.tsx
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Mail, Lock, ArrowLeft } from "lucide-react";
 import styled from "styled-components";
 import { useAuth } from "../contexts/AuthContext";
 
 export function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
 
   // States
@@ -21,7 +22,7 @@ export function Login() {
   const [error, setError] = useState("");
 
   // Handlers
-  const handleLoginSubmit = async (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
@@ -31,7 +32,13 @@ export function Login() {
       const result = await login(email, password);
       console.log("Login result:", result);
       if (result.success) {
-        navigate("/");
+        // Check if there's a redirect parameter
+        const redirect = searchParams.get("redirect");
+        if (redirect) {
+          navigate(redirect);
+        } else {
+          navigate("/");
+        }
       } else {
         setError(result.error || "Login failed. Please check your credentials.");
       }

@@ -78,12 +78,29 @@ export function OrderConfirmationPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // Wait for auth to finish loading before checking authentication
+    if (isLoading) {
+      return;
+    }
+
+    // Check if we have a session_id from Stripe redirect
+    const sessionId = searchParams.get("session_id");
+    
+    // If not authenticated and we have a session_id, save it and redirect to login
+    if (!isAuthenticated && sessionId) {
+      // Save session_id to localStorage so we can retrieve it after login
+      localStorage.setItem("pendingSessionId", sessionId);
+      navigate("/login?redirect=/order-confirmation", { replace: true });
+      return;
+    }
+
+    // If not authenticated and no session_id, redirect to login
     if (!isAuthenticated) {
       navigate("/login");
       return;
@@ -93,10 +110,17 @@ export function OrderConfirmationPage() {
       try {
         setLoading(true);
         
-        // Check if we have a session_id from Stripe redirect
-        const sessionId = searchParams.get("session_id");
+        // Check for session_id from query params or localStorage (after login redirect)
+        const sessionIdFromQuery = searchParams.get("session_id");
+        const sessionIdFromStorage = localStorage.getItem("pendingSessionId");
+        const sessionId = sessionIdFromQuery || sessionIdFromStorage;
         
         if (sessionId) {
+          // Clear it from localStorage if it was there
+          if (sessionIdFromStorage) {
+            localStorage.removeItem("pendingSessionId");
+          }
+          
           // Handle Stripe redirect - verify payment and create order
           const verifyResponse = await apiService.verifyPaymentSession(sessionId);
           
@@ -162,7 +186,7 @@ export function OrderConfirmationPage() {
     };
 
     processOrder();
-  }, [id, searchParams, isAuthenticated, navigate]);
+  }, [id, searchParams, isAuthenticated, isLoading, navigate]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-IN", {
