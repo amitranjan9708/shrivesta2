@@ -1,7 +1,8 @@
 // API service layer for communicating with the backend
-// Use proxy in development, full URL in production
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  (import.meta.env.DEV ? "/api/v1" : "http://localhost:3000/api/v1");
+// Import config to get the correct API URL based on environment
+import { config } from "../config/env";
+
+const API_BASE_URL = config.API_BASE_URL;
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -115,7 +116,7 @@ class ApiService {
       if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
         return {
           success: false,
-          error: "Unable to connect to server. Please check if the backend server is running on http://localhost:3000",
+          error: `Unable to connect to server. Please check if the backend server is running at ${API_BASE_URL}`,
         };
       }
       
@@ -218,11 +219,34 @@ class ApiService {
     });
   }
 
-  // Payment endpoints
+  // Payment endpoints - Stripe Checkout
+  async createCheckoutSession(data: {
+    amount: number;
+    orderId?: string;
+    customerEmail?: string;
+    customerName?: string;
+  }) {
+    return this.request<{
+      sessionId: string;
+      url: string;
+    }>("/payment/create-checkout-session", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async verifyPaymentSession(sessionId: string) {
+    return this.request("/payment/verify-session", {
+      method: "POST",
+      body: JSON.stringify({ sessionId }),
+    });
+  }
+
+  // Legacy endpoints (for backward compatibility)
   async createPaymentIntent(amount: number, currency: string = "inr") {
     return this.request<{
-      clientSecret: string;
-      paymentIntentId: string;
+      sessionId: string;
+      url: string;
     }>("/payment/create-payment-intent", {
       method: "POST",
       body: JSON.stringify({ amount, currency }),

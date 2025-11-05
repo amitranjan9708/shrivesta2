@@ -1,316 +1,190 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, CreditCard, Loader } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, MapPin, CreditCard, Loader, ExternalLink } from "lucide-react";
 import { Button } from "./ui/button";
 import { apiService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
-import { loadStripe } from "@stripe/stripe-js";
-import { config } from "../config/env";
-import {
-  Elements,
-  CardElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
 
-// Initialize Stripe with publishable key - only if key exists and is valid
-let stripePromise: Promise<any> | null = null;
-if (config.STRIPE_PUBLISHABLE_KEY && config.STRIPE_PUBLISHABLE_KEY.trim() !== "") {
-  // Check if it's a secret key (should never be in frontend!)
-  if (config.STRIPE_PUBLISHABLE_KEY.startsWith("sk_")) {
-    console.error("❌ ERROR: You're using a SECRET key (sk_test_...) in the frontend!");
-    console.error("   Frontend needs PUBLISHABLE key (pk_test_...)");
-    stripePromise = null;
-  } else if (config.STRIPE_PUBLISHABLE_KEY.startsWith("pk_")) {
-    console.log("✅ Initializing Stripe with publishable key");
-    stripePromise = loadStripe(config.STRIPE_PUBLISHABLE_KEY);
-  } else {
-    console.warn("⚠️ Invalid Stripe key format");
-    stripePromise = null;
-  }
-} else {
-  console.warn("⚠️ Stripe publishable key not configured");
-}
-
-interface CheckoutFormProps {
-  amount: number;
-  shippingAddress: string;
-  pincode: string;
-  onSuccess: (orderId: number, orderNumber: string) => void;
-  onError: (error: string) => void;
-}
-
-function CheckoutForm({
+// Payment Button Component - Redirects to Stripe Checkout
+function PaymentButton({
   amount,
   shippingAddress,
   pincode,
-  onSuccess,
+  customerEmail,
+  customerName,
   onError,
-}: CheckoutFormProps) {
-  const stripe = useStripe();
-  const elements = useElements();
+}: {
+  amount: number;
+  shippingAddress: string;
+  pincode: string;
+  customerEmail?: string;
+  customerName?: string;
+  onError: (error: string) => void;
+}) {
   const [processing, setProcessing] = useState(false);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    console.log("CheckoutForm mounted, amount:", amount);
-    console.log("Stripe instance:", stripe ? "Loaded" : "Not loaded");
-    
-    // Create payment intent when component mounts
-    const createPaymentIntent = async () => {
-      try {
-        console.log("Creating payment intent for amount:", amount);
-        const response = await apiService.createPaymentIntent(amount, "inr");
-        console.log("Payment intent response:", response);
-        
-        if (response.success && response.data) {
-          setClientSecret(response.data.clientSecret);
-          setPaymentIntentId(response.data.paymentIntentId);
-          setError(null);
-        } else {
-          const errorMsg = response.error || "Failed to initialize payment";
-          setError(errorMsg);
-          onError(errorMsg);
-        }
-      } catch (error) {
-        const errorMsg = "Failed to initialize payment";
-        console.error("Payment intent error:", error);
-        setError(errorMsg);
-        onError(errorMsg);
-      }
-    };
-
-    if (amount > 0) {
-      createPaymentIntent();
-    }
-  }, [amount]);
-
-  useEffect(() => {
-    console.log("CheckoutForm render - stripe:", !!stripe, "elements:", !!elements, "clientSecret:", !!clientSecret);
-    if (stripe && elements) {
-      console.log("✅ Stripe and Elements loaded successfully");
-    } else {
-      console.warn("⚠️ Stripe or Elements not loaded yet");
-    }
-  }, [stripe, elements, clientSecret]);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!stripe || !elements || !clientSecret || !paymentIntentId) {
-      const missing: string[] = [];
-      if (!stripe) missing.push("Stripe");
-      if (!elements) missing.push("Elements");
-      if (!clientSecret) missing.push("Client Secret");
-      if (!paymentIntentId) missing.push("Payment Intent ID");
-      onError(`Missing: ${missing.join(", ")}`);
-      return;
-    }
-
-    // Prevent double submission
-    if (processing) {
+  const handlePayment = async () => {
+    if (!shippingAddress || pincode.length !== 6) {
+      setError("Please fill in shipping address and pincode");
       return;
     }
 
     setProcessing(true);
     setError(null);
 
-    const cardElement = elements.getElement(CardElement);
-
-    if (!cardElement) {
-      onError("Card element not found");
-      setProcessing(false);
-      return;
-    }
-
     try {
-      // First, check if payment intent is already succeeded
-      let paymentIntent;
-      try {
-        paymentIntent = await stripe.retrievePaymentIntent(clientSecret);
-      } catch (retrieveError) {
-        console.error("Error retrieving payment intent:", retrieveError);
-        // Continue to try confirming
-      }
+      // Save shipping address and pincode to localStorage before redirecting
+      localStorage.setItem("pendingShippingAddress", shippingAddress);
+      localStorage.setItem("pendingPincode", pincode);
 
-      // If payment intent is already succeeded, skip confirmation
-      if (paymentIntent?.paymentIntent?.status === "succeeded") {
-        console.log("Payment already succeeded, proceeding to order creation");
-        // Create order directly
-        const orderResponse = await apiService.createOrder({
-          shippingAddress,
-          pincode,
-          paymentMethod: "card",
-          paymentIntentId: paymentIntentId,
-        });
+      // Create Stripe Checkout Session
+      const response = await apiService.createCheckoutSession({
+        amount,
+        customerEmail,
+        customerName,
+      });
 
-        if (orderResponse.success && orderResponse.data) {
-          const orderData = orderResponse.data as any;
-          const order = orderData.order || orderData;
-          onSuccess(order.id, order.orderNumber);
-        } else {
-          const errorMsg = orderResponse.error || "Failed to create order";
-          setError(errorMsg);
-          onError(errorMsg);
-        }
-        setProcessing(false);
-        return;
-      }
-
-      // Confirm payment with Stripe if not already succeeded
-      const { error: stripeError, paymentIntent: confirmedPaymentIntent } = await stripe.confirmCardPayment(
-        clientSecret,
-        {
-          payment_method: {
-            card: cardElement as any,
-          },
-        }
-      );
-
-      if (stripeError) {
-        // Handle specific error for already succeeded payment
-        if (stripeError.code === "payment_intent_unexpected_state") {
-          console.log("Payment already succeeded, proceeding to order creation");
-          // Payment is already succeeded, try to create order
-          const orderResponse = await apiService.createOrder({
-            shippingAddress,
-            pincode,
-            paymentMethod: "card",
-            paymentIntentId: paymentIntentId,
-          });
-
-          if (orderResponse.success && orderResponse.data) {
-            const orderData = orderResponse.data as any;
-            const order = orderData.order || orderData;
-            onSuccess(order.id, order.orderNumber);
-          } else {
-            const errorMsg = orderResponse.error || "Failed to create order";
-            setError(errorMsg);
-            onError(errorMsg);
-          }
-        } else {
-          const errorMsg = stripeError.message || "Payment failed";
-          setError(errorMsg);
-          onError(errorMsg);
-        }
-        setProcessing(false);
-        return;
-      }
-
-      if (confirmedPaymentIntent?.status === "succeeded") {
-        // Create order after successful payment
-        const orderResponse = await apiService.createOrder({
-          shippingAddress,
-          pincode,
-          paymentMethod: "card",
-          paymentIntentId: confirmedPaymentIntent.id,
-        });
-
-        if (orderResponse.success && orderResponse.data) {
-          const orderData = orderResponse.data as any;
-          const order = orderData.order || orderData;
-          onSuccess(order.id, order.orderNumber);
-        } else {
-          const errorMsg = orderResponse.error || "Failed to create order";
-          setError(errorMsg);
-          onError(errorMsg);
-        }
+      if (response.success && response.data?.url) {
+        // Redirect to Stripe Checkout page
+        window.location.href = response.data.url;
       } else {
-        const errorMsg = `Payment status: ${confirmedPaymentIntent?.status || "unknown"}`;
+        const errorMsg = response.error || "Failed to initialize payment";
         setError(errorMsg);
         onError(errorMsg);
+        setProcessing(false);
       }
     } catch (error: any) {
-      console.error("Payment error:", error);
-      const errorMsg = error.message || "An error occurred during payment";
+      const errorMsg = error.message || "Failed to initialize payment";
       setError(errorMsg);
       onError(errorMsg);
-    } finally {
       setProcessing(false);
     }
   };
 
-  // Show loading state while Stripe initializes
-  if (!stripe || !elements) {
-    return (
-      <div className="bg-white p-6 rounded-lg border-2 border-gray-200">
-        <h3 className="text-lg font-semibold mb-4">Payment Details</h3>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-center gap-2">
-            <Loader className="h-4 w-4 animate-spin text-yellow-600" />
-            <p className="text-sm text-yellow-800">
-              Loading payment form... {!stripe && "(Stripe initializing)"} {!elements && "(Elements loading)"}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-4">
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
-      
-      <div className="bg-white p-6 rounded-lg border-2 border-gray-200">
-        <h3 className="text-lg font-semibold mb-4">Payment Details</h3>
-        <div className="border rounded-lg p-4 bg-gray-50">
-          <CardElement
-            options={{
-              style: {
-                base: {
-                  fontSize: "16px",
-                  color: "#424770",
-                  "::placeholder": {
-                    color: "#aab7c4",
-                  },
-                },
-                invalid: {
-                  color: "#9e2146",
-                },
-              },
-            }}
-          />
-        </div>
-        {!clientSecret && (
-          <p className="text-xs text-gray-500 mt-2">Initializing payment...</p>
-        )}
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <h3 className="text-lg font-semibold mb-2 flex items-center text-blue-900">
+          <CreditCard className="h-5 w-5 mr-2" />
+          Payment Options
+        </h3>
+        <p className="text-sm text-blue-800 mb-2">
+          You'll be redirected to Stripe's secure payment page where you can pay using:
+        </p>
+        <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
+          <li>Credit/Debit Cards</li>
+          <li>UPI (Google Pay, PhonePe, Paytm, etc.)</li>
+          <li>Net Banking</li>
+          <li>Wallets</li>
+        </ul>
       </div>
 
       <Button
-        type="submit"
-        disabled={!stripe || processing || !paymentIntentId || !clientSecret}
+        type="button"
+        onClick={handlePayment}
+        disabled={processing || !shippingAddress || pincode.length !== 6}
         className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-4 rounded-lg font-bold text-lg shadow-lg"
       >
         {processing ? (
           <>
             <Loader className="h-5 w-5 mr-2 animate-spin" />
-            Processing Payment...
+            Redirecting to Payment...
           </>
         ) : (
           <>
-            <CreditCard className="h-5 w-5 mr-2" />
-            Pay ₹{amount.toFixed(2)}
+            <ExternalLink className="h-5 w-5 mr-2" />
+            Pay ₹{amount.toFixed(2)} - Continue to Payment
           </>
         )}
       </Button>
-    </form>
+    </div>
   );
 }
 
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const [cartData, setCartData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [shippingAddress, setShippingAddress] = useState("");
   const [pincode, setPincode] = useState("");
   const [totalAmount, setTotalAmount] = useState(0);
+
+  // Handle payment success callback from Stripe Checkout
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    const canceled = searchParams.get("canceled");
+
+    if (canceled === "true") {
+      // User canceled payment
+      console.log("Payment canceled by user");
+      return;
+    }
+
+    if (sessionId) {
+      // Verify payment session and create order
+      const verifyAndCreateOrder = async () => {
+        try {
+          setLoading(true);
+          const verifyResponse = await apiService.verifyPaymentSession(sessionId);
+          
+          if (verifyResponse.success && verifyResponse.data) {
+            const sessionData = verifyResponse.data as any;
+            const session = sessionData.session || sessionData;
+            
+            if (session.status === "paid") {
+              // Payment successful, create order
+              const orderResponse = await apiService.createOrder({
+                shippingAddress: localStorage.getItem("pendingShippingAddress") || "",
+                pincode: localStorage.getItem("pendingPincode") || "",
+                paymentMethod: "card",
+                paymentIntentId: session.payment_intent || session.id || sessionId,
+              });
+
+              if (orderResponse.success && orderResponse.data) {
+                const orderData = orderResponse.data as any;
+                const order = orderData.order || orderData;
+                
+                // Clear pending data
+                localStorage.removeItem("pendingShippingAddress");
+                localStorage.removeItem("pendingPincode");
+                
+                // Redirect to order confirmation
+                navigate(`/order-confirmation/${order.id}`, {
+                  state: { orderNumber: order.orderNumber },
+                });
+              } else {
+                alert("Payment successful but failed to create order. Please contact support.");
+                navigate("/cart");
+              }
+            } else {
+              alert("Payment not completed. Please try again.");
+              navigate("/checkout");
+            }
+          } else {
+            alert("Failed to verify payment. Please contact support.");
+            navigate("/checkout");
+          }
+        } catch (error) {
+          console.error("Error verifying payment:", error);
+          alert("An error occurred while processing your payment.");
+          navigate("/checkout");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      verifyAndCreateOrder();
+    }
+  }, [searchParams, navigate]);
 
   useEffect(() => {
     // Wait for auth to finish loading before checking
@@ -443,79 +317,14 @@ export function CheckoutPage() {
               {/* Payment Section */}
               {shippingAddress && pincode.length === 6 ? (
                 <div className="mb-6">
-                  <h2 className="text-lg font-semibold mb-4 flex items-center">
-                    <CreditCard className="h-5 w-5 mr-2" />
-                    Payment Details
-                  </h2>
-                  
-                  {!config.STRIPE_PUBLISHABLE_KEY || config.STRIPE_PUBLISHABLE_KEY.trim() === "" ? (
-                    <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6">
-                      <p className="text-sm text-red-800 font-semibold mb-3">
-                        ⚠️ Stripe Configuration Missing
-                      </p>
-                      <p className="text-xs text-red-700 mb-3">
-                        Please add your Stripe publishable key to the .env file:
-                      </p>
-                      <code className="text-xs bg-red-100 p-3 rounded block mb-3 font-mono">
-                        VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
-                      </code>
-                      <p className="text-xs text-red-700 mb-2">
-                        Get your key from:{" "}
-                        <a
-                          href="https://dashboard.stripe.com/apikeys"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline font-semibold"
-                        >
-                          Stripe Dashboard
-                        </a>
-                      </p>
-                      <p className="text-xs text-red-600 mt-3 pt-3 border-t border-red-200">
-                        <strong>Steps:</strong>
-                        <br />1. Create a .env file in frontend/shrivesta2/
-                        <br />2. Add: VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
-                        <br />3. Restart your dev server
-                      </p>
-                    </div>
-                  ) : config.STRIPE_PUBLISHABLE_KEY.startsWith("sk_") ? (
-                    <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6">
-                      <p className="text-sm text-red-800 font-semibold mb-3">
-                        ❌ WRONG KEY TYPE!
-                      </p>
-                      <p className="text-xs text-red-700 mb-3">
-                        You're using a <strong>SECRET key</strong> (sk_test_...) in the frontend!
-                      </p>
-                      <p className="text-xs text-red-700 mb-3">
-                        Frontend needs a <strong>PUBLISHABLE key</strong> (pk_test_...)
-                      </p>
-                      <p className="text-xs text-red-600 mb-3">
-                        <strong>Fix:</strong>
-                        <br />1. Go to <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline">Stripe Dashboard</a>
-                        <br />2. Copy the <strong>Publishable key</strong> (starts with pk_test_)
-                        <br />3. Update your .env file:
-                        <code className="block bg-red-100 p-2 rounded mt-2 font-mono">
-                          VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
-                        </code>
-                        <br />4. Keep your secret key (sk_test_...) ONLY in backend/.env
-                      </p>
-                    </div>
-                  ) : stripePromise ? (
-                    <Elements stripe={stripePromise}>
-                      <CheckoutForm
-                        amount={totalAmount}
-                        shippingAddress={shippingAddress}
-                        pincode={pincode}
-                        onSuccess={handlePaymentSuccess}
-                        onError={handlePaymentError}
-                      />
-                    </Elements>
-                  ) : (
-                    <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6">
-                      <p className="text-sm text-red-800 font-semibold">
-                        ⚠️ Stripe failed to initialize. Please check your publishable key.
-                      </p>
-                    </div>
-                  )}
+                  <PaymentButton
+                    amount={totalAmount}
+                    shippingAddress={shippingAddress}
+                    pincode={pincode}
+                    customerEmail={user?.email}
+                    customerName={user?.name}
+                    onError={handlePaymentError}
+                  />
                 </div>
               ) : (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
