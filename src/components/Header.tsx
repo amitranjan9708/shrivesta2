@@ -3,10 +3,12 @@ import { Button } from "./ui/button";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { apiService } from "../services/api";
 
 export function Header() {
   const [bannerIndex, setBannerIndex] = useState(0);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const { isAuthenticated, user, logout } = useAuth();
 
   const announcements = [
@@ -21,6 +23,42 @@ export function Header() {
     }, 3500);
     return () => clearInterval(t);
   }, []);
+
+  // Fetch cart count
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      if (isAuthenticated) {
+        try {
+          const response = await apiService.getCart();
+          if (response.success && response.data) {
+            // Handle nested response structure: response.data.data.items
+            const nestedData = (response.data as any).data;
+            const data = nestedData || response.data;
+            const items = data.items || [];
+            
+            if (items && items.length > 0) {
+              const totalItems = items.reduce(
+                (sum: number, item: any) => sum + (item.quantity || 0),
+                0
+              );
+              setCartCount(totalItems);
+            } else {
+              setCartCount(0);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching cart count:", error);
+        }
+      } else {
+        setCartCount(0);
+      }
+    };
+
+    fetchCartCount();
+    // Refresh cart count every 5 seconds
+    const interval = setInterval(fetchCartCount, 5000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   const navigate = useNavigate();
 
@@ -172,9 +210,11 @@ export function Header() {
                 className="hover:bg-amber-50 relative h-8 w-8 sm:h-10 sm:w-10"
               >
                 <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
-                <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
-                  3
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center">
+                    {cartCount > 9 ? "9+" : cartCount}
+                  </span>
+                )}
               </Button>
             </Link>
             <Button variant="ghost" size="icon" className="md:hidden h-8 w-8">

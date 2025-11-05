@@ -70,13 +70,23 @@ export default function ProductDetailCard() {
 
     try {
       setAddingToCart(true);
+      console.log("Adding to cart - productId:", product.id, "quantity:", quantity);
       const response = await apiService.addToCart(product.id.toString(), quantity);
+      console.log("Add to cart response:", response);
+      
       if (response.success) {
+        // Show success message
         alert("Product added to cart successfully!");
+        // Refresh cart count in header (will happen automatically via Header's useEffect)
+        // Optionally navigate to cart
+        // navigate("/cart");
       } else {
-        alert("Failed to add product to cart");
+        const errorMsg = response.error || response.data?.message || "Failed to add product to cart";
+        alert(errorMsg);
+        console.error("Add to cart error:", response);
       }
     } catch (err) {
+      console.error("Add to cart error:", err);
       alert("An error occurred while adding to cart");
     } finally {
       setAddingToCart(false);

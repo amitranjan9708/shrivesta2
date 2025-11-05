@@ -22,7 +22,7 @@ export function Signup() {
     try {
       const result = await register(name, email, password);
       if (result.success) {
-        navigate("/login");
+        navigate("/");
       } else {
         setError(result.error || "Registration failed");
       }

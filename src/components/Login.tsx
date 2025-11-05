@@ -27,14 +27,17 @@ export function Login() {
     setError("");
 
     try {
+      console.log("Attempting login for:", email);
       const result = await login(email, password);
+      console.log("Login result:", result);
       if (result.success) {
         navigate("/");
       } else {
-        setError(result.error || "Login failed");
+        setError(result.error || "Login failed. Please check your credentials.");
       }
-    } catch (error) {
-      setError("An unexpected error occurred");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setError(error?.message || "Failed to connect to server. Please check if the backend is running.");
     } finally {
       setIsLoading(false);
     }

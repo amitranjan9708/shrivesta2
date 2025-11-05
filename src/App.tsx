@@ -13,6 +13,8 @@ import { ContactSection } from "./components/ContactSection";
 import Products from "./components/Products";
 import ProductDetailCard from "./components/ProductDetailPage";
 import { CartPage } from "./components/CartPage";
+import { CheckoutPage } from "./components/CheckoutPage";
+import { OrderConfirmationPage } from "./components/OrderConfirmationPage";
 import React, { useEffect } from "react";
 import { Login } from "./components/Login";
 import { Signup } from "./components/Signup";
@@ -52,6 +54,8 @@ export default function App() {
             <Route path="/occasions" element={<Occasions />} />
             <Route path="/about" element={<FeaturesSection />} />
             <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/order-confirmation/:id" element={<OrderConfirmationPage />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetailCard />} />
             <Route path="/login" element={<Login />} />
