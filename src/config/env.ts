@@ -15,7 +15,7 @@ const getApiBaseUrl = () => {
       return explicitUrl;
     }
     // Default production URL
-    return "https://your-backend-service.onrender.com/api/v1";
+    return "https://api-shrivesta-backend.onrender.com/api/v1";
   }
   
   // For local development
