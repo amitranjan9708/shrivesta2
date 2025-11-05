@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   CheckCircle,
   Package,
@@ -75,8 +75,9 @@ function getStatusIndex(status: string): number {
 }
 
 export function OrderConfirmationPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isAuthenticated } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -88,30 +89,80 @@ export function OrderConfirmationPage() {
       return;
     }
 
-    const fetchOrder = async () => {
-      if (!id) {
-        setError("Order ID not found");
-        setLoading(false);
-        return;
-      }
-
+    const processOrder = async () => {
       try {
-        const response = await apiService.getOrderById(id);
-        if (response.success && response.data) {
-          const orderData = (response.data as any).order || response.data;
-          setOrder(orderData);
+        setLoading(true);
+        
+        // Check if we have a session_id from Stripe redirect
+        const sessionId = searchParams.get("session_id");
+        
+        if (sessionId) {
+          // Handle Stripe redirect - verify payment and create order
+          const verifyResponse = await apiService.verifyPaymentSession(sessionId);
+          
+          if (verifyResponse.success && verifyResponse.data) {
+            const sessionData = verifyResponse.data as any;
+            const session = sessionData.session || sessionData;
+            
+            if (session.status === "paid") {
+              // Payment successful, create order
+              const orderResponse = await apiService.createOrder({
+                shippingAddress: localStorage.getItem("pendingShippingAddress") || "",
+                pincode: localStorage.getItem("pendingPincode") || "",
+                paymentMethod: "card",
+                paymentIntentId: session.payment_intent || session.id || sessionId,
+              });
+
+              if (orderResponse.success && orderResponse.data) {
+                const orderData = orderResponse.data as any;
+                const order = orderData.order || orderData;
+                
+                // Clear pending data
+                localStorage.removeItem("pendingShippingAddress");
+                localStorage.removeItem("pendingPincode");
+                
+                // Redirect to order confirmation with order ID
+                navigate(`/order-confirmation/${order.id}`, { replace: true });
+                return;
+              } else {
+                setError("Payment successful but failed to create order. Please contact support.");
+                setLoading(false);
+                return;
+              }
+            } else {
+              setError("Payment not completed. Please try again.");
+              setLoading(false);
+              return;
+            }
+          } else {
+            setError("Failed to verify payment. Please contact support.");
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // If we have an order ID, fetch the order
+        if (id) {
+          const response = await apiService.getOrderById(id);
+          if (response.success && response.data) {
+            const orderData = (response.data as any).order || response.data;
+            setOrder(orderData);
+          } else {
+            setError(response.error || "Failed to fetch order");
+          }
         } else {
-          setError(response.error || "Failed to fetch order");
+          setError("Order ID not found");
         }
       } catch (err) {
-        setError("An error occurred while fetching order");
+        console.error("Error processing order:", err);
+        setError("An error occurred while processing your order");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOrder();
-  }, [id, isAuthenticated, navigate]);
+    processOrder();
+  }, [id, searchParams, isAuthenticated, navigate]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-IN", {

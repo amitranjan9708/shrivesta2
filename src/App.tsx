@@ -55,6 +55,7 @@ export default function App() {
             <Route path="/about" element={<FeaturesSection />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
             <Route path="/order-confirmation/:id" element={<OrderConfirmationPage />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetailCard />} />
