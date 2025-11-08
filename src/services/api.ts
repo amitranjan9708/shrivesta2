@@ -127,6 +127,14 @@ class ApiService {
         };
       }
 
+      // If backend already returned a success structure with data, unwrap it
+      if (data.success === true && data.data !== undefined) {
+        return {
+          success: true,
+          data: data.data,
+        };
+      }
+
       return {
         success: true,
         data,

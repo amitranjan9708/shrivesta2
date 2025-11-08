@@ -71,7 +71,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               ...userData,
               id: userData.id.toString(),
             });
-            console.log("Auth check - User set successfully");
           } else {
             // Only remove token if it's explicitly an auth failure
             const errorLower = (response.error || "").toLowerCase();

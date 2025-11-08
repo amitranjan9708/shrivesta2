@@ -19,26 +19,18 @@ export const AdminDashboard: React.FC = () => {
         const res = await apiService.adminGetSalesStats();
         console.log("Admin sales stats response:", res);
         
-        // Handle different response structures
-        // Backend returns: { success: true, data: { totalRevenue, totalUnitsSold, totalOrders } }
-        // API service wraps it: { success: true, data: { success: true, data: {...} } }
-        let statsData: SalesStats | null = null;
-        
+        // API service now unwraps the response, so res.data should be the stats object directly
         if (res.success && res.data) {
-          // Try nested data structure first (res.data.data)
-          if ((res.data as any)?.data) {
-            statsData = (res.data as any).data as SalesStats;
-          } 
-          // Try direct data structure (res.data)
-          else if ((res.data as any)?.totalRevenue !== undefined) {
-            statsData = res.data as SalesStats;
+          const statsData = res.data as SalesStats;
+          if (statsData.totalRevenue !== undefined || statsData.totalOrders !== undefined || statsData.totalUnitsSold !== undefined) {
+            console.log("Sales stats data:", statsData);
+            setStats(statsData);
+            setError("");
+          } else {
+            const errorMsg = "Invalid stats data structure";
+            console.error("Error loading sales stats:", errorMsg, res);
+            setError(errorMsg);
           }
-        }
-        
-        if (statsData) {
-          console.log("Sales stats data:", statsData);
-          setStats(statsData);
-          setError("");
         } else {
           const errorMsg = res.error || "Failed to load sales stats";
           console.error("Error loading sales stats:", errorMsg, res);

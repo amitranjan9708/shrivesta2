@@ -106,7 +106,7 @@ export function Header() {
             />
             <div
               className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 bg-clip-text text-transparent tracking-tight"
-              on
+              
             >
               ShriVesta
             </div>

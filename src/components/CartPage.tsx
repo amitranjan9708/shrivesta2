@@ -49,8 +49,6 @@ export function CartPage() {
       setLoading(true);
       setError("");
       const response = await apiService.getCart();
-      console.log("=== CART REFRESH DEBUG ===");
-      console.log("Full API Response:", JSON.stringify(response, null, 2));
       
       if (response.success && response.data) {
         // Handle nested response structure: response.data.data.items
@@ -58,25 +56,15 @@ export function CartPage() {
         const data = nestedData || response.data;
         const items = data.items || [];
         
-        console.log("Cart data object:", data);
-        console.log("Cart items:", items);
-        console.log("Cart items type:", typeof items);
-        console.log("Cart items is array?", Array.isArray(items));
-        console.log("Cart items length:", items?.length);
-        
         if (!items || items.length === 0) {
-          console.log("Cart is empty - setting empty array");
           setCartItems([]);
           setError("");
           setLoading(false);
           return;
         }
         
-        console.log("Processing", items.length, "cart items");
-        const mappedItems = (items || []).map((item: any, index: number) => {
-          console.log(`Mapping item ${index}:`, item);
-          console.log(`Item ${index} product:`, item.product);
-          const mapped = {
+        const mappedItems = (items || []).map((item: any) => {
+          return {
             id: item.id.toString(),
             productId: item.productId.toString(),
             name: item.product?.product || item.product?.name || "Product",
@@ -93,31 +81,18 @@ export function CartPage() {
               salePrice: item.product?.salePrice || item.product?.price || 0,
             },
           };
-          console.log(`Mapped item ${index}:`, mapped);
-          return mapped;
         });
         
-        console.log("=== MAPPED ITEMS ===");
-        console.log("Total mapped items:", mappedItems.length);
-        console.log("Mapped items array:", mappedItems);
-        console.log("Setting cartItems state...");
-        
-        // Create new array reference to ensure React detects the change
         setCartItems([...mappedItems]);
-        console.log("Cart items state set successfully");
       } else {
         const errorMsg = response.error || "Failed to fetch cart items";
-        console.error("Cart fetch failed:", errorMsg);
-        console.error("Response:", response);
         setError(errorMsg);
       }
     } catch (err) {
       const errorMsg = "An error occurred while fetching cart items";
-      console.error("Error fetching cart:", err);
       setError(errorMsg);
     } finally {
       setLoading(false);
-      console.log("=== END CART REFRESH DEBUG ===");
     }
   }, [isAuthenticated]);
 
@@ -154,7 +129,6 @@ export function CartPage() {
   // Listen for cart-cleared event (dispatched after successful order)
   useEffect(() => {
     const handleCartCleared = () => {
-      console.log("Cart cleared event received, refreshing cart...");
       if (isAuthenticated) {
         refreshCart();
       }
@@ -471,7 +445,6 @@ export function CartPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      console.log("Checkout button clicked, cartItems.length:", cartItems.length);
                       navigate("/checkout");
                     }}
                     className="w-full mt-6 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-4 px-6 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] border-2 border-amber-800 flex items-center justify-center gap-2"
