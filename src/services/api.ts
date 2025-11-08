@@ -25,14 +25,15 @@ class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     const isAuthEndpoint = endpoint.includes("/auth/");
 
-    const defaultHeaders: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
+    const defaultHeaders: Record<string, string> = {};
 
     // Get token from localStorage if available
     const token = localStorage.getItem("authToken");
     if (token) {
       defaultHeaders["Authorization"] = `Bearer ${token}`;
+      console.log("API Request - Token found, adding Authorization header");
+    } else {
+      console.warn("API Request - No token found in localStorage");
     }
 
     const config: RequestInit = {
@@ -44,7 +45,16 @@ class ApiService {
       credentials: "include", // Include cookies for CORS
     };
 
+    // If the body is not FormData and no explicit Content-Type, set JSON
+    const isFormData = (options as any).body instanceof FormData;
+    if (!isFormData) {
+      (config.headers as Record<string, string>)["Content-Type"] =
+        (config.headers as Record<string, string>)["Content-Type"] ||
+        "application/json";
+    }
+
     console.log("API Request:", url, "Method:", options.method || "GET");
+    console.log("API Request Headers:", Object.keys(config.headers as Record<string, string>));
 
     try {
       const response = await fetch(url, config);
@@ -87,6 +97,20 @@ class ApiService {
             // Might be a temporary server issue - don't remove token
             console.warn("401 Unauthorized - might be temporary, keeping token");
           }
+        }
+        
+        // Handle 403 Forbidden - user is authenticated but not authorized
+        if (response.status === 403) {
+          console.error("403 Forbidden - User does not have required permissions");
+          const errorMsg = data.message || data.error || "Access denied: You don't have permission to access this resource";
+          // Include userRole if provided by backend
+          if (data.userRole) {
+            console.error(`User role: ${data.userRole}, required: ADMIN`);
+          }
+          return {
+            success: false,
+            error: errorMsg,
+          };
         }
         
         return {
@@ -167,7 +191,18 @@ class ApiService {
   }
 
   async getProfile() {
-    return this.request<{ user: { id: number; name: string; email: string; createdAt: string } }>("/auth/profile");
+    return this.request<{ user: { id: number; name: string; email: string; shippingAddress?: string; createdAt: string } }>("/auth/profile");
+  }
+
+  async getShippingAddress() {
+    return this.request<{ shippingAddress: string | null; pincode: string | null }>("/auth/shipping-address");
+  }
+
+  async updateShippingAddress(shippingAddress: string, pincode?: string) {
+    return this.request<{ user: { id: number; name: string; email: string; shippingAddress: string | null; pincode: string | null }; shippingAddress: string | null; pincode: string | null }>("/auth/shipping-address", {
+      method: "PUT",
+      body: JSON.stringify({ shippingAddress, pincode }),
+    });
   }
 
   async changePassword(passwordData: {
@@ -192,6 +227,47 @@ class ApiService {
 
   async getProductById(id: string) {
     return this.request(`/products/${id}`);
+  }
+
+  // Admin endpoints
+  async adminGetProducts() {
+    return this.request("/admin/products");
+  }
+
+  async adminDeleteProduct(id: number) {
+    return this.request(`/admin/products/${id}`, { method: "DELETE" });
+  }
+
+  async adminCreateProduct(input: {
+    product: string;
+    subtitle: string;
+    oldPrice: number;
+    salePrice: number;
+    rating: number;
+    ratingCount: number;
+    subcategory: string;
+    images: File[];
+  }) {
+    const form = new FormData();
+    form.append("product", String(input.product));
+    form.append("subtitle", String(input.subtitle));
+    form.append("oldPrice", String(input.oldPrice));
+    form.append("salePrice", String(input.salePrice));
+    form.append("rating", String(input.rating));
+    form.append("ratingCount", String(input.ratingCount));
+    form.append("subcategory", String(input.subcategory));
+    input.images.forEach((f) => form.append("images", f));
+
+    return this.request("/admin/products", {
+      method: "POST",
+      body: form,
+      // Let browser set multipart boundary; do not set Content-Type
+      headers: {},
+    });
+  }
+
+  async adminGetSalesStats() {
+    return this.request("/admin/stats/sales");
   }
 
   // Cart endpoints

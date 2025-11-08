@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, MapPin, CreditCard, Loader, ExternalLink } from "lucide-react";
 import { Button } from "./ui/button";
@@ -12,6 +12,8 @@ function PaymentButton({
   pincode,
   customerEmail,
   customerName,
+  savedAddress,
+  savedPincode,
   onError,
 }: {
   amount: number;
@@ -19,6 +21,8 @@ function PaymentButton({
   pincode: string;
   customerEmail?: string;
   customerName?: string;
+  savedAddress?: string | null;
+  savedPincode?: string | null;
   onError: (error: string) => void;
 }) {
   const [processing, setProcessing] = useState(false);
@@ -34,6 +38,16 @@ function PaymentButton({
     setError(null);
 
     try {
+      // Save shipping address and pincode to user's profile if they're different from saved values
+      if (shippingAddress !== savedAddress || pincode !== savedPincode) {
+        try {
+          await apiService.updateShippingAddress(shippingAddress, pincode);
+        } catch (error) {
+          console.error("Error saving shipping address and pincode:", error);
+          // Continue with payment even if address save fails
+        }
+      }
+
       // Save shipping address and pincode to localStorage before redirecting
       localStorage.setItem("pendingShippingAddress", shippingAddress);
       localStorage.setItem("pendingPincode", pincode);
@@ -46,8 +60,9 @@ function PaymentButton({
       });
 
       if (response.success && response.data?.url) {
-        // Redirect to Stripe Checkout page
-        window.location.href = response.data.url;
+        // Redirect to Stripe Checkout page in the same tab
+        // Using replace() instead of href to ensure same-tab navigation
+        window.location.replace(response.data.url);
       } else {
         const errorMsg = response.error || "Failed to initialize payment";
         setError(errorMsg);
@@ -117,6 +132,10 @@ export function CheckoutPage() {
   const [shippingAddress, setShippingAddress] = useState("");
   const [pincode, setPincode] = useState("");
   const [totalAmount, setTotalAmount] = useState(0);
+  const [addressLoading, setAddressLoading] = useState(true);
+  const [savedAddress, setSavedAddress] = useState<string | null>(null);
+  const [savedPincode, setSavedPincode] = useState<string | null>(null);
+  const addressFetchedRef = useRef(false);
 
   // Handle payment success callback from Stripe Checkout
   useEffect(() => {
@@ -157,12 +176,21 @@ export function CheckoutPage() {
                 localStorage.removeItem("pendingShippingAddress");
                 localStorage.removeItem("pendingPincode");
                 
+                // Dispatch event to notify cart that it should be cleared
+                window.dispatchEvent(new CustomEvent("cart-cleared"));
+                
                 // Redirect to order confirmation
                 navigate(`/order-confirmation/${order.id}`, {
                   state: { orderNumber: order.orderNumber },
                 });
               } else {
-                alert("Payment successful but failed to create order. Please contact support.");
+                // Show the actual error message from backend
+                const errorMessage = 
+                  orderResponse.error || 
+                  orderResponse.message || 
+                  "Payment successful but failed to create order. Please contact support.";
+                console.error("Order creation failed - Full response:", JSON.stringify(orderResponse, null, 2));
+                alert(errorMessage);
                 navigate("/cart");
               }
             } else {
@@ -231,8 +259,85 @@ export function CheckoutPage() {
       }
     };
 
+    const fetchShippingAddress = async () => {
+      // Prevent multiple fetches
+      if (addressFetchedRef.current) {
+        return;
+      }
+      
+      try {
+        setAddressLoading(true);
+        addressFetchedRef.current = true;
+        
+        console.log("=== Fetching Shipping Address ===");
+        const response = await apiService.getShippingAddress();
+        console.log("Full API response:", JSON.stringify(response, null, 2));
+        
+        if (response.success && response.data) {
+          // The API service wraps the response: { success: true, data: backendResponse }
+          // Backend returns: { success: true, shippingAddress: "..." }
+          // So response.data = { success: true, shippingAddress: "..." }
+          const backendResponse = response.data;
+          console.log("Backend response object:", backendResponse);
+          console.log("Backend response keys:", Object.keys(backendResponse));
+          
+          const address = backendResponse.shippingAddress;
+          const pincode = backendResponse.pincode;
+          console.log("Extracted address value:", address);
+          console.log("Extracted pincode value:", pincode);
+          console.log("Address type:", typeof address);
+          console.log("Address is null?", address === null);
+          console.log("Address is undefined?", address === undefined);
+          
+          if (address !== undefined && address !== null && typeof address === 'string') {
+            // Address exists and is a string
+            console.log("✅ Address found! Setting state...");
+            setSavedAddress(address);
+            
+            // Only set shippingAddress if address is not empty after trimming
+            if (address.trim().length > 0) {
+              console.log("✅ Setting shippingAddress state to:", address);
+              setShippingAddress(address);
+              console.log("✅ Shipping address state updated");
+            } else {
+              console.log("⚠️ Address is empty string, not setting");
+            }
+          } else {
+            console.log("❌ No saved address found for user (address value:", address, ", type:", typeof address, ")");
+            setSavedAddress(null);
+          }
+
+          // Handle pincode separately
+          if (pincode !== undefined && pincode !== null && typeof pincode === 'string' && pincode.trim().length === 6) {
+            console.log("✅ Pincode found! Setting state...");
+            setSavedPincode(pincode);
+            setPincode(pincode);
+            console.log("✅ Pincode state updated:", pincode);
+          } else {
+            console.log("❌ No saved pincode found for user (pincode value:", pincode, ", type:", typeof pincode, ")");
+            setSavedPincode(null);
+          }
+        } else {
+          console.warn("❌ Failed to fetch shipping address. Success:", response.success, "Error:", response.error || "Unknown error");
+          setSavedAddress(null);
+        }
+      } catch (error) {
+        console.error("❌ Error fetching shipping address:", error);
+        setSavedAddress(null);
+        addressFetchedRef.current = false; // Allow retry on error
+      } finally {
+        setAddressLoading(false);
+      }
+    };
+
     fetchCart();
+    fetchShippingAddress();
   }, [isAuthenticated, authLoading, navigate]);
+
+  // Debug effect to track address state changes
+  useEffect(() => {
+    console.log("Address state changed - shippingAddress:", shippingAddress, "savedAddress:", savedAddress);
+  }, [shippingAddress, savedAddress]);
 
   const handlePaymentSuccess = (orderId: number, orderNumber: string) => {
     navigate(`/order-confirmation/${orderId}`, {
@@ -283,39 +388,77 @@ export function CheckoutPage() {
                   <MapPin className="h-5 w-5 mr-2" />
                   Shipping Address
                 </h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Address
-                    </label>
-                    <textarea
-                      value={shippingAddress}
-                      onChange={(e) => setShippingAddress(e.target.value)}
-                      placeholder="Enter your complete address"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      rows={3}
-                      required
-                    />
+                
+                {user && (
+                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-sm text-amber-900">
+                      <span className="font-semibold">Delivering to:</span> {user.name}
+                    </p>
+                    {savedAddress && !addressLoading && (
+                      <p className="text-xs text-amber-700 mt-1">
+                        Your saved address has been pre-filled below. You can edit it if needed.
+                      </p>
+                    )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pincode
-                    </label>
-                    <input
-                      type="text"
-                      value={pincode}
-                      onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      placeholder="Enter 6-digit pincode"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      maxLength={6}
-                      required
-                    />
+                )}
+
+                {addressLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader className="h-6 w-6 animate-spin text-amber-500 mr-2" />
+                    <span className="text-gray-600">Loading your saved address...</span>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Address {savedAddress && <span className="text-green-600 text-xs">(Pre-filled from your profile)</span>}
+                      </label>
+                      <textarea
+                        value={shippingAddress}
+                        onChange={(e) => setShippingAddress(e.target.value)}
+                        placeholder="Enter your complete address including street, city, state, and pincode"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        rows={4}
+                        required
+                      />
+                      {!savedAddress && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          This address will be saved to your profile for future orders.
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Pincode {savedPincode && <span className="text-green-600 text-xs">(Pre-filled from your profile)</span>}
+                      </label>
+                      <input
+                        type="text"
+                        value={pincode}
+                        onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder="Enter 6-digit pincode"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        maxLength={6}
+                        required
+                      />
+                      {!savedPincode && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          This pincode will be saved to your profile for future orders.
+                        </p>
+                      )}
+                    </div>
+                    {savedAddress && shippingAddress !== savedAddress && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p className="text-sm text-blue-800">
+                          Your address has been updated. It will be saved to your profile when you complete the payment.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Payment Section */}
-              {shippingAddress && pincode.length === 6 ? (
+              {!addressLoading && shippingAddress && pincode.length === 6 ? (
                 <div className="mb-6">
                   <PaymentButton
                     amount={totalAmount}
@@ -323,16 +466,18 @@ export function CheckoutPage() {
                     pincode={pincode}
                     customerEmail={user?.email}
                     customerName={user?.name}
+                    savedAddress={savedAddress}
+                    savedPincode={savedPincode}
                     onError={handlePaymentError}
                   />
                 </div>
-              ) : (
+              ) : !addressLoading ? (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <p className="text-sm text-yellow-800">
                     Please fill in your shipping address and pincode to proceed with payment.
                   </p>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
 

@@ -56,6 +56,9 @@ export default defineConfig({
   server: {
     port: 3001, // Changed to avoid conflict with backend
     open: true,
+    hmr: {
+      overlay: true,
+    },
     proxy: {
       "/api": {
         target: "http://localhost:3000",
@@ -63,5 +66,9 @@ export default defineConfig({
         secure: false,
       },
     },
+  },
+  // Disable caching in development
+  optimizeDeps: {
+    force: true,
   },
 });

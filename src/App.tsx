@@ -19,7 +19,12 @@ import React, { useEffect } from "react";
 import { Login } from "./components/Login";
 import { Signup } from "./components/Signup";
 import { AccountDashboard } from "./components/AccountInfo";
+import { OrdersPage } from "./components/OrdersPage";
+import { ShippingAddressPage } from "./components/ShippingAddressPage";
 import { AuthProvider } from "./contexts/AuthContext";
+import { AdminDashboard } from "./components/admin/AdminDashboard";
+import { AdminProducts } from "./components/admin/AdminProducts";
+import { RequireAdmin } from "./components/admin/RequireAdmin";
 
 function HomePage() {
   return (
@@ -55,13 +60,39 @@ export default function App() {
             <Route path="/about" element={<FeaturesSection />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
-            <Route path="/order-confirmation/:id" element={<OrderConfirmationPage />} />
+            <Route
+              path="/order-confirmation"
+              element={<OrderConfirmationPage />}
+            />
+            <Route
+              path="/order-confirmation/:id"
+              element={<OrderConfirmationPage />}
+            />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetailCard />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/account" element={<AccountDashboard />} />
+            <Route path="/account/orders" element={<OrdersPage />} />
+            <Route path="/account/address" element={<ShippingAddressPage />} />
+
+            {/* Admin routes */}
+            <Route
+              path="/admin"
+              element={
+                <RequireAdmin>
+                  <AdminDashboard />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/products"
+              element={
+                <RequireAdmin>
+                  <AdminProducts />
+                </RequireAdmin>
+              }
+            />
 
             {/* 404 page fallback */}
             <Route

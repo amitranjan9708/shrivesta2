@@ -151,6 +151,22 @@ export function CartPage() {
     };
   }, [isAuthenticated, refreshCart]);
 
+  // Listen for cart-cleared event (dispatched after successful order)
+  useEffect(() => {
+    const handleCartCleared = () => {
+      console.log("Cart cleared event received, refreshing cart...");
+      if (isAuthenticated) {
+        refreshCart();
+      }
+    };
+
+    window.addEventListener('cart-cleared', handleCartCleared);
+
+    return () => {
+      window.removeEventListener('cart-cleared', handleCartCleared);
+    };
+  }, [isAuthenticated, refreshCart]);
+
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity === 0) {
       await removeItem(productId);

@@ -1,31 +1,60 @@
 // AccountDashboard.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, ArrowLeft } from 'lucide-react';
+import { User, Mail, Package, MapPin, Loader } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../services/api';
+import { AccountLayout } from './AccountLayout';
 
 export function AccountDashboard() {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+  const [shippingAddress, setShippingAddress] = useState<string | null>(null);
+  const [pincode, setPincode] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [user, setUser] = useState({
-    name: 'John Doe',
-    email: 'john@example.com',
-  });
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    const fetchShippingAddress = async () => {
+      try {
+        const response = await apiService.getShippingAddress();
+        console.log("Shipping address response:", response);
+        if (response.success && response.data) {
+          // Handle both response.data.shippingAddress and response.data.data.shippingAddress
+          const address = response.data.shippingAddress ?? (response.data as any).data?.shippingAddress;
+          const savedPincode = response.data.pincode ?? (response.data as any).data?.pincode;
+          setShippingAddress(address || null);
+          setPincode(savedPincode || null);
+        }
+      } catch (err) {
+        console.error('Error fetching shipping address:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchShippingAddress();
+  }, [isAuthenticated, navigate]);
+
+  if (!user) {
+    return (
+      <AccountLayout>
+        <LoadingContainer>
+          <Loader size={48} className="animate-spin" />
+          <p>Loading...</p>
+        </LoadingContainer>
+      </AccountLayout>
+    );
+  }
 
   return (
-    <Container>
-      {/* Sidebar */}
-      <Sidebar>
-        <h2>Account</h2>
-        <SidebarButton onClick={() => alert('Go to Orders')}>Orders</SidebarButton>
-        <SidebarButton onClick={() => alert('Go to Payment Options')}>Payment Options</SidebarButton>
-        <SidebarButton onClick={() => alert('Go to Delivery Addresses')}>Delivery Addresses</SidebarButton>
-        <SidebarButton onClick={() => alert('Go to Wishlist')}>Wishlist</SidebarButton>
-        <SidebarButton onClick={() => alert('Go to Settings')}>Settings</SidebarButton>
-      </Sidebar>
-
-      {/* Main Content */}
-      <Main>
+    <AccountLayout>
+      <Content>
         <Header>
           <h1>My Account</h1>
         </Header>
@@ -36,104 +65,56 @@ export function AccountDashboard() {
           </UserIcon>
           <Info>
             <Name>{user.name}</Name>
-            <Email>{user.email}</Email>
+            <Email>
+              <Mail size={16} />
+              {user.email}
+            </Email>
           </Info>
-          <EditButton onClick={() => navigate('/account/edit')}>Edit Account</EditButton>
         </UserInfoCard>
 
         <Section>
-          <SectionTitle>Orders</SectionTitle>
+          <SectionTitle>
+            <Package size={20} />
+            Orders
+          </SectionTitle>
           <p>View your past orders and track current orders.</p>
-          <SectionButton onClick={() => alert('View Orders')}>Go to Orders</SectionButton>
+          <SectionButton onClick={() => navigate('/account/orders')}>View All Orders</SectionButton>
         </Section>
 
         <Section>
-          <SectionTitle>Payment Options</SectionTitle>
-          <p>Manage your saved cards, UPI, wallets, etc.</p>
-          <SectionButton onClick={() => alert('Payment Options')}>Manage Payment</SectionButton>
+          <SectionTitle>
+            <MapPin size={20} />
+            Delivery Address
+          </SectionTitle>
+          {loading ? (
+            <p>Loading address...</p>
+          ) : shippingAddress ? (
+            <>
+              <AddressPreview>
+                {shippingAddress}
+                {pincode && (
+                  <div style={{ marginTop: '8px', fontWeight: '600', color: '#333' }}>
+                    Pincode: {pincode}
+                  </div>
+                )}
+              </AddressPreview>
+              <SectionButton onClick={() => navigate('/account/address')}>Manage Address</SectionButton>
+            </>
+          ) : (
+            <>
+              <p>Add a delivery address to make checkout faster.</p>
+              <SectionButton onClick={() => navigate('/account/address')}>Add Address</SectionButton>
+            </>
+          )}
         </Section>
-
-        <Section>
-          <SectionTitle>Delivery Addresses</SectionTitle>
-          <p>Manage your saved delivery addresses.</p>
-          <SectionButton onClick={() => alert('Delivery Addresses')}>Manage Addresses</SectionButton>
-        </Section>
-      </Main>
-    </Container>
+      </Content>
+    </AccountLayout>
   );
 }
 
 // Styled Components
-const Container = styled.div`
-  display: flex;
-  min-height: 100vh;
-  background: linear-gradient(to bottom right, #fff8dc, #fffacd, #ffdab9);
-  flex-direction: column;
-
-  @media(min-width: 768px) {
-    flex-direction: row;
-  }
-`;
-
-const Sidebar = styled.div`
-  width: 250px;
-  background: #fff3cd;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-
-  h2 {
-    margin-bottom: 15px;
-    color: #f59e0b;
-  }
-
-  @media(max-width: 768px) {
-    width: 100%;
-    flex-direction: row;
-    overflow-x: auto;
-    padding: 10px 0;
-    gap: 8px;
-
-    h2 {
-      display: none;
-    }
-  }
-`;
-
-const SidebarButton = styled.button`
-  background: none;
-  border: none;
-  text-align: left;
-  font-size: 16px;
-  color: #333;
-  cursor: pointer;
-  padding: 8px 10px;
-  border-radius: 8px;
+const Content = styled.div`
   width: 100%;
-  margin-bottom: 8px;
-
-  &:hover {
-    background: #ffe8a1;
-  }
-
-  @media(max-width: 768px) {
-    text-align: center;
-    margin-bottom: 0;
-    white-space: nowrap;
-    padding: 8px 12px;
-  }
-`;
-
-
-
-
-const Main = styled.div`
-  flex: 1;
-  padding: 20px;
-
-  @media(min-width: 768px) {
-    padding: 40px;
-  }
 `;
 
 const Header = styled.div`
@@ -199,6 +180,9 @@ const Name = styled.h2`
 
 const Email = styled.p`
   font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 
   @media(min-width: 768px) {
     font-size: 14px;
@@ -206,24 +190,32 @@ const Email = styled.p`
   color: #555;
 `;
 
-const EditButton = styled.button`
-  background: linear-gradient(to right, #f59e0b, #facc15);
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 14px;
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
 
-  &:hover {
-    opacity: 0.9;
-  }
-
-  @media(min-width: 768px) {
-    font-size: 16px;
-    padding: 10px 15px;
+  p {
+    font-size: 18px;
+    color: #666;
   }
 `;
+
+const AddressPreview = styled.div`
+  background: #f9fafb;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 10px 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  border-left: 3px solid #f59e0b;
+`;
+
 
 const Section = styled.div`
   background: white;
@@ -241,10 +233,17 @@ const Section = styled.div`
 const SectionTitle = styled.h3`
   font-size: 16px;
   margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
   @media(min-width: 768px) {
     font-size: 18px;
     margin-bottom: 10px;
+  }
+
+  svg {
+    color: #f59e0b;
   }
 `;
 
