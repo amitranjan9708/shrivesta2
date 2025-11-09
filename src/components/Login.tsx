@@ -4,6 +4,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Mail, Lock, ArrowLeft } from "lucide-react";
 import styled from "styled-components";
 import { useAuth } from "../contexts/AuthContext";
+import { apiService } from "../services/api";
 
 export function Login() {
   const navigate = useNavigate();
@@ -50,20 +51,64 @@ export function Login() {
     }
   };
 
-  const handleSendOtp = () => {
-    // Simulate sending OTP
-    setOtpSent(true);
-    alert(`OTP sent to ${email}`);
+  const handleSendOtp = async () => {
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await apiService.requestPasswordReset(email);
+      if (response.success) {
+        setOtpSent(true);
+        setError(""); // Clear any previous errors
+      } else {
+        setError(response.error || "Failed to send reset code. Please try again.");
+      }
+    } catch (error: any) {
+      setError(error?.message || "Failed to send reset code. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleResetPassword = () => {
-    // Simulate resetting password
-    alert(`Password for ${email} reset successfully!`);
-    setForgotPassword(false);
-    setOtpSent(false);
-    setEmail("");
-    setOtp("");
-    setNewPassword("");
+  const handleResetPassword = async () => {
+    if (!otp || !newPassword) {
+      setError("Please enter both the code and new password");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await apiService.resetPassword(email, otp, newPassword);
+      if (response.success) {
+        // Success - reset form and go back to login
+        setError("");
+        setForgotPassword(false);
+        setOtpSent(false);
+        setEmail("");
+        setOtp("");
+        setNewPassword("");
+        // Show success message (you could use a toast notification here)
+        alert("Password reset successfully! You can now login with your new password.");
+      } else {
+        setError(response.error || "Failed to reset password. Please check your code and try again.");
+      }
+    } catch (error: any) {
+      setError(error?.message || "Failed to reset password. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -158,6 +203,7 @@ export function Login() {
           {/* Forgot Password - Step 1: Enter Email */}
           {forgotPassword && !otpSent && (
             <Form>
+              {error && <ErrorMessage>{error}</ErrorMessage>}
               <InputGroup>
                 <label>Email</label>
                 <InputWrapper>
@@ -168,13 +214,17 @@ export function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     required
+                    disabled={isLoading}
                   />
                 </InputWrapper>
               </InputGroup>
-              <SubmitButton type="button" onClick={handleSendOtp}>
-                Send OTP
+              <SubmitButton type="button" onClick={handleSendOtp} disabled={isLoading}>
+                {isLoading ? "Sending..." : "Send Reset Code"}
               </SubmitButton>
-              <BackToLogin onClick={() => setForgotPassword(false)}>
+              <BackToLogin onClick={() => {
+                setForgotPassword(false);
+                setError("");
+              }}>
                 Back to Login
               </BackToLogin>
             </Form>
@@ -183,15 +233,18 @@ export function Login() {
           {/* Forgot Password - Step 2: Enter OTP and New Password */}
           {forgotPassword && otpSent && (
             <Form>
+              {error && <ErrorMessage>{error}</ErrorMessage>}
               <InputGroup>
-                <label>OTP</label>
+                <label>Reset Code</label>
                 <InputWrapper>
                   <input
                     type="text"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="Enter OTP"
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="Enter 6-digit code"
                     required
+                    disabled={isLoading}
+                    maxLength={6}
                   />
                 </InputWrapper>
               </InputGroup>
@@ -199,23 +252,35 @@ export function Login() {
               <InputGroup>
                 <label>New Password</label>
                 <InputWrapper>
+                  <LockIcon />
                   <input
                     type={showPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="••••••••"
                     required
+                    disabled={isLoading}
                   />
-                  <ShowHideButton onClick={() => setShowPassword((v) => !v)}>
+                  <ShowHideButton 
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    disabled={isLoading}
+                  >
                     {showPassword ? "Hide" : "Show"}
                   </ShowHideButton>
                 </InputWrapper>
               </InputGroup>
 
-              <SubmitButton type="button" onClick={handleResetPassword}>
-                Reset Password
+              <SubmitButton type="button" onClick={handleResetPassword} disabled={isLoading}>
+                {isLoading ? "Resetting..." : "Reset Password"}
               </SubmitButton>
-              <BackToLogin onClick={() => setForgotPassword(false)}>
+              <BackToLogin onClick={() => {
+                setForgotPassword(false);
+                setOtpSent(false);
+                setError("");
+                setOtp("");
+                setNewPassword("");
+              }}>
                 Back to Login
               </BackToLogin>
             </Form>
