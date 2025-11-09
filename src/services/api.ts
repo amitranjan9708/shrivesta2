@@ -369,6 +369,31 @@ class ApiService {
   async getDeliveryTracking(orderId: string) {
     return this.request(`/delivery/${orderId}`);
   }
+
+  // Review endpoints
+  async getProductReviews(productId: string) {
+    return this.request(`/reviews/product/${productId}`);
+  }
+
+  async createReview(productId: string, rating: number, comment?: string) {
+    return this.request(`/reviews/product/${productId}`, {
+      method: "POST",
+      body: JSON.stringify({ rating, comment }),
+    });
+  }
+
+  async updateReview(reviewId: string, rating?: number, comment?: string) {
+    return this.request(`/reviews/${reviewId}`, {
+      method: "PUT",
+      body: JSON.stringify({ rating, comment }),
+    });
+  }
+
+  async deleteReview(reviewId: string) {
+    return this.request(`/reviews/${reviewId}`, {
+      method: "DELETE",
+    });
+  }
 }
 
 // Create and export a singleton instance
