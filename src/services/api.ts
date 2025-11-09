@@ -229,8 +229,38 @@ class ApiService {
   }
 
   // Product endpoints
-  async getProducts() {
-    return this.request("/products");
+  async getProducts(
+    subcategory?: string,
+    sortBy?: string,
+    minPrice?: string,
+    maxPrice?: string,
+    minRating?: string,
+    subcategories?: string
+  ) {
+    let endpoint = "/products";
+    const params = new URLSearchParams();
+    if (subcategory) {
+      params.append("subcategory", subcategory);
+    }
+    if (sortBy) {
+      params.append("sortBy", sortBy);
+    }
+    if (minPrice) {
+      params.append("minPrice", minPrice);
+    }
+    if (maxPrice) {
+      params.append("maxPrice", maxPrice);
+    }
+    if (minRating) {
+      params.append("minRating", minRating);
+    }
+    if (subcategories) {
+      params.append("subcategories", subcategories);
+    }
+    if (params.toString()) {
+      endpoint += `?${params.toString()}`;
+    }
+    return this.request(endpoint);
   }
 
   async getProductById(id: string) {
