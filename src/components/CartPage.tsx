@@ -5,6 +5,39 @@ import { Link, useNavigate } from "react-router-dom";
 import { apiService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 
+// Add CSS for mobile full-width cart items
+const cartMobileStyles = `
+  @media (max-width: 767px) {
+    .cart-container-mobile {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      max-width: 100% !important;
+    }
+    .cart-item-mobile {
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: block !important;
+    }
+    .cart-item-content-mobile {
+      display: block !important;
+      width: 100% !important;
+      padding: 16px !important;
+    }
+    .cart-item-desktop {
+      display: none !important;
+    }
+  }
+  @media (min-width: 768px) {
+    .cart-item-mobile {
+      display: none !important;
+    }
+    .cart-item-desktop {
+      display: flex !important;
+    }
+  }
+`;
+
 interface CartItem {
   id: string;
   productId: string;
@@ -285,10 +318,14 @@ export function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-amber-50 py-8 pb-24 lg:pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">Shopping Cart</h1>
+    <>
+      <style>{cartMobileStyles}</style>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-amber-50 py-8 pb-24 lg:pb-8">
+        <div className="max-w-7xl mx-auto cart-container-mobile">
+        {/* Header with padding on mobile */}
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">Shopping Cart</h1>
               <div className="flex items-center gap-4">
             <button
               onClick={refreshCart}
@@ -307,12 +344,13 @@ export function CartPage() {
               <span className="sm:hidden">Back</span>
             </Link>
           </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-8" style={{ gap: '0' }}>
           {/* Cart Items */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-white md:rounded-xl shadow-md overflow-hidden" style={{ borderRadius: '0' }}>
               {cartItems.length === 0 ? (
                   <div className="p-12 text-center">
                   <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -329,55 +367,248 @@ export function CartPage() {
                   {cartItems.map((item, index) => (
                     <div
                       key={`${item.id}-${item.productId}-${index}`}
-                      className="flex flex-col sm:flex-row items-start sm:items-center p-4 sm:p-6 hover:bg-gray-50 transition-colors"
+                      className="cart-item-mobile"
                     >
-                      <img
-                        src={item.image || '/placeholder.png'}
-                        alt={item.name}
-                        className="w-32 h-32 sm:w-36 sm:h-36 object-cover rounded-lg mr-4 mb-4 sm:mb-0 flex-shrink-0"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/placeholder.png';
-                        }}
-                      />
-
-                    <div className="flex-1 w-full sm:w-auto">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {item.name}
-                      </h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
-                        {item.size && <span>Size: {item.size}</span>}
-                        {item.color && <span>Color: {item.color}</span>}
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="flex items-center space-x-3">
-                          <button
-                            onClick={() =>
-                              updateQuantity(item.productId, item.quantity - 1)
-                            }
-                            disabled={updating === item.productId}
-                            className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-amber-50 hover:border-amber-400 disabled:opacity-50 transition-colors"
-                          >
-                            <Minus className="h-4 w-4" />
-                          </button>
-
-                          <span className="w-12 text-center font-semibold text-lg">
-                            {item.quantity}
-                          </span>
-
-                          <button
-                            onClick={() =>
-                              updateQuantity(item.productId, item.quantity + 1)
-                            }
-                            disabled={updating === item.productId}
-                            className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-amber-50 hover:border-amber-400 disabled:opacity-50 transition-colors"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </button>
+                      {/* Mobile Layout - Vertical Stack - Everything below image */}
+                      <div className="cart-item-content-mobile">
+                        {/* Image - Full width on mobile, at the top */}
+                        <div style={{ width: '100%', marginBottom: '20px', display: 'block' }}>
+                          <img
+                            src={item.image || '/placeholder.png'}
+                            alt={item.name}
+                            style={{
+                              width: '100%',
+                              height: '280px',
+                              objectFit: 'cover',
+                              borderRadius: '8px',
+                              display: 'block'
+                            }}
+                            className="shadow-sm"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/placeholder.png';
+                            }}
+                          />
                         </div>
 
-                        <div className="text-right">
-                          <div className="text-xl font-bold text-gray-900">
+                        {/* Title - Below image, full width */}
+                        <div style={{ width: '100%', marginBottom: '12px', display: 'block' }}>
+                          <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', margin: 0 }}>
+                            {item.name}
+                          </h3>
+                        </div>
+
+                        {/* Size/Color Info - Below title, full width */}
+                        {(item.size || item.color) && (
+                          <div style={{ width: '100%', marginBottom: '16px', display: 'block' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                              {item.size && (
+                                <span style={{ 
+                                  backgroundColor: '#f3f4f6', 
+                                  padding: '6px 12px', 
+                                  borderRadius: '6px',
+                                  fontSize: '14px',
+                                  color: '#4b5563'
+                                }}>
+                                  Size: {item.size}
+                                </span>
+                              )}
+                              {item.color && (
+                                <span style={{ 
+                                  backgroundColor: '#f3f4f6', 
+                                  padding: '6px 12px', 
+                                  borderRadius: '6px',
+                                  fontSize: '14px',
+                                  color: '#4b5563'
+                                }}>
+                                  Color: {item.color}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Price - Below size/color, full width */}
+                        <div style={{ width: '100%', marginBottom: '20px', display: 'block' }}>
+                          <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>
+                            ₹{(item.price * item.quantity).toLocaleString()}
+                          </div>
+                          {item.originalPrice &&
+                            item.originalPrice > item.price && (
+                              <div style={{ fontSize: '14px', color: '#6b7280', textDecoration: 'line-through', marginTop: '4px' }}>
+                                ₹{(item.originalPrice * item.quantity).toLocaleString()}
+                              </div>
+                            )}
+                        </div>
+
+                        {/* Quantity Controls - Below price, full width, centered */}
+                        <div style={{ width: '100%', marginBottom: '20px', display: 'block' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <button
+                              onClick={() =>
+                                updateQuantity(item.productId, item.quantity - 1)
+                              }
+                              disabled={updating === item.productId}
+                              style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '50%',
+                                border: '2px solid #d1d5db',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: 'white',
+                                cursor: updating === item.productId ? 'not-allowed' : 'pointer',
+                                opacity: updating === item.productId ? 0.5 : 1
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!updating) {
+                                  e.currentTarget.style.backgroundColor = '#fef3c7';
+                                  e.currentTarget.style.borderColor = '#f59e0b';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'white';
+                                e.currentTarget.style.borderColor = '#d1d5db';
+                              }}
+                            >
+                              <Minus className="h-5 w-5" />
+                            </button>
+
+                            <span style={{ 
+                              width: '80px', 
+                              textAlign: 'center', 
+                              fontWeight: '600', 
+                              fontSize: '20px',
+                              margin: '0 24px'
+                            }}>
+                              {item.quantity}
+                            </span>
+
+                            <button
+                              onClick={() =>
+                                updateQuantity(item.productId, item.quantity + 1)
+                              }
+                              disabled={updating === item.productId}
+                              style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '50%',
+                                border: '2px solid #d1d5db',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: 'white',
+                                cursor: updating === item.productId ? 'not-allowed' : 'pointer',
+                                opacity: updating === item.productId ? 0.5 : 1
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!updating) {
+                                  e.currentTarget.style.backgroundColor = '#fef3c7';
+                                  e.currentTarget.style.borderColor = '#f59e0b';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'white';
+                                e.currentTarget.style.borderColor = '#d1d5db';
+                              }}
+                            >
+                              <Plus className="h-5 w-5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Delete Button - Below quantity, full width, centered */}
+                        <div style={{ width: '100%', display: 'block' }}>
+                          <button
+                            onClick={() => removeItem(item.productId)}
+                            disabled={updating === item.productId}
+                            style={{
+                              width: '100%',
+                              padding: '12px 24px',
+                              color: '#dc2626',
+                              backgroundColor: 'white',
+                              border: '2px solid #fecaca',
+                              borderRadius: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '8px',
+                              fontWeight: '500',
+                              cursor: updating === item.productId ? 'not-allowed' : 'pointer',
+                              opacity: updating === item.productId ? 0.5 : 1
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!updating) {
+                                e.currentTarget.style.backgroundColor = '#fef2f2';
+                                e.currentTarget.style.color = '#b91c1c';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'white';
+                              e.currentTarget.style.color = '#dc2626';
+                            }}
+                          >
+                            <Trash2 className="h-5 w-5" />
+                            <span>Remove Item</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Desktop Layout - Horizontal */}
+                      <div className="cart-item-desktop hidden md:flex items-center gap-6">
+                        {/* Image - Larger on desktop */}
+                        <div className="flex-shrink-0">
+                          <img
+                            src={item.image || '/placeholder.png'}
+                            alt={item.name}
+                            className="w-40 h-40 lg:w-48 lg:h-48 object-cover rounded-lg border border-gray-200"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/placeholder.png';
+                            }}
+                          />
+                        </div>
+
+                        {/* Product Info - Middle Section */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                            {item.name}
+                          </h3>
+                          <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
+                            {item.size && <span>Size: {item.size}</span>}
+                            {item.color && <span>Color: {item.color}</span>}
+                          </div>
+
+                          {/* Quantity Controls - Desktop */}
+                          <div className="flex items-center space-x-3">
+                            <button
+                              onClick={() =>
+                                updateQuantity(item.productId, item.quantity - 1)
+                              }
+                              disabled={updating === item.productId}
+                              className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-amber-50 hover:border-amber-400 disabled:opacity-50 transition-colors"
+                            >
+                              <Minus className="h-4 w-4" />
+                            </button>
+
+                            <span className="w-12 text-center font-semibold text-lg">
+                              {item.quantity}
+                            </span>
+
+                            <button
+                              onClick={() =>
+                                updateQuantity(item.productId, item.quantity + 1)
+                              }
+                              disabled={updating === item.productId}
+                              className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-amber-50 hover:border-amber-400 disabled:opacity-50 transition-colors"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Price - Desktop */}
+                        <div className="flex-shrink-0 text-right mr-4">
+                          <div className="text-2xl font-bold text-gray-900 mb-1">
                             ₹{(item.price * item.quantity).toLocaleString()}
                           </div>
                           {item.originalPrice &&
@@ -387,16 +618,16 @@ export function CartPage() {
                               </div>
                             )}
                         </div>
-                      </div>
-                    </div>
 
-                      <button
-                        onClick={() => removeItem(item.productId)}
-                        disabled={updating === item.productId}
-                        className="ml-auto sm:ml-4 mt-4 sm:mt-0 p-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg disabled:opacity-50 transition-colors flex-shrink-0"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
+                        {/* Delete Button - Desktop */}
+                        <button
+                          onClick={() => removeItem(item.productId)}
+                          disabled={updating === item.productId}
+                          className="flex-shrink-0 p-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg disabled:opacity-50 transition-colors"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -405,7 +636,7 @@ export function CartPage() {
           </div>
 
           {/* Order Summary */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 px-4 sm:px-6 lg:px-0">
             <div className="bg-white rounded-xl shadow-lg p-6 sticky top-8 border-2 border-amber-100">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
                 Order Summary
@@ -501,7 +732,8 @@ export function CartPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

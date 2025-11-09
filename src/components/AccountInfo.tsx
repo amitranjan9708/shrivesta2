@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Package, MapPin, Loader } from 'lucide-react';
+import { User, Mail, Package, MapPin, Loader, Settings, Plus, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { AccountLayout } from './AccountLayout';
@@ -107,6 +107,64 @@ export function AccountDashboard() {
             </>
           )}
         </Section>
+
+        {/* Admin Section - Only visible to admin users */}
+        {user.role && user.role.toUpperCase() === 'ADMIN' && (
+          <Section style={{ border: '2px solid #f59e0b', background: 'linear-gradient(to right, #fef3c7, #fde68a)' }}>
+            <SectionTitle>
+              <Shield size={20} />
+              Admin Panel
+            </SectionTitle>
+            <p style={{ marginBottom: '12px', color: '#92400e', fontWeight: '500' }}>
+              Manage products, view analytics, and control your store.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <SectionButton 
+                onClick={() => navigate('/admin/products')}
+                style={{ 
+                  background: 'linear-gradient(to right, #f59e0b, #facc15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <Plus size={16} />
+                Add Product
+              </SectionButton>
+              <SectionButton 
+                onClick={() => navigate('/admin/products')}
+                style={{ 
+                  background: 'white',
+                  color: '#f59e0b',
+                  border: '2px solid #f59e0b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <Package size={16} />
+                Manage Products
+              </SectionButton>
+              <SectionButton 
+                onClick={() => navigate('/admin')}
+                style={{ 
+                  background: 'white',
+                  color: '#f59e0b',
+                  border: '2px solid #f59e0b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <Settings size={16} />
+                Admin Dashboard
+              </SectionButton>
+            </div>
+          </Section>
+        )}
       </Content>
     </AccountLayout>
   );
