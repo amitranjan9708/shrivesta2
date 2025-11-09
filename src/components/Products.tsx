@@ -5,7 +5,7 @@ import { FilterSidebar } from "./FilterSidebar";
 import { Button } from "./ui/button";
 import { Link, useSearchParams } from "react-router-dom";
 import { apiService } from "../services/api";
-import { Filter, X } from "lucide-react";
+import { Filter } from "lucide-react";
 
 interface Product {
   id: number;
@@ -32,15 +32,10 @@ const Products = () => {
   >("newest");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
-  // Pending filter states (what user selects, doesn't trigger API)
-  const [pendingPriceRange, setPendingPriceRange] = useState<[number, number]>([0, 100000]);
-  const [pendingRatings, setPendingRatings] = useState<number[]>([]);
-  const [pendingSubcategories, setPendingSubcategories] = useState<string[]>([]);
-  
-  // Applied filter states (what triggers API calls)
-  const [appliedPriceRange, setAppliedPriceRange] = useState<[number, number]>([0, 100000]);
-  const [appliedRatings, setAppliedRatings] = useState<number[]>([]);
-  const [appliedSubcategories, setAppliedSubcategories] = useState<string[]>([]);
+  // Filter states
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
+  const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
+  const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
 
   const [searchParams] = useSearchParams();
   const subcategory = searchParams.get("subcategory");
@@ -77,39 +72,21 @@ const Products = () => {
     return Array.from(subcats).sort();
   }, [allProducts]);
 
-  // Calculate active filters count (based on applied filters)
+  // Calculate active filters count
   const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (appliedPriceRange[0] !== minPrice || appliedPriceRange[1] !== maxPrice) count++;
-    if (appliedRatings.length > 0) count++;
-    if (appliedSubcategories.length > 0) count++;
+    if (priceRange[0] !== minPrice || priceRange[1] !== maxPrice) count++;
+    if (selectedRatings.length > 0) count++;
+    if (selectedSubcategories.length > 0) count++;
     return count;
-  }, [appliedPriceRange, minPrice, maxPrice, appliedRatings, appliedSubcategories]);
-  
-  // Check if there are pending changes
-  const hasPendingChanges = useMemo(() => {
-    return (
-      pendingPriceRange[0] !== appliedPriceRange[0] ||
-      pendingPriceRange[1] !== appliedPriceRange[1] ||
-      JSON.stringify(pendingRatings.sort()) !== JSON.stringify(appliedRatings.sort()) ||
-      JSON.stringify(pendingSubcategories.sort()) !== JSON.stringify(appliedSubcategories.sort())
-    );
-  }, [pendingPriceRange, appliedPriceRange, pendingRatings, appliedRatings, pendingSubcategories, appliedSubcategories]);
+  }, [priceRange, minPrice, maxPrice, selectedRatings, selectedSubcategories]);
 
   // Initialize price range when products are loaded
   useEffect(() => {
-    if (allProducts.length > 0 && pendingPriceRange[1] === 100000) {
-      setPendingPriceRange([minPrice, maxPrice]);
-      setAppliedPriceRange([minPrice, maxPrice]);
+    if (allProducts.length > 0 && priceRange[1] === 100000) {
+      setPriceRange([minPrice, maxPrice]);
     }
   }, [allProducts, minPrice, maxPrice]);
-  
-  // Apply filters function
-  const handleApplyFilters = () => {
-    setAppliedPriceRange(pendingPriceRange);
-    setAppliedRatings(pendingRatings);
-    setAppliedSubcategories(pendingSubcategories);
-  };
 
   // Fetch all products for filter options (without filters)
   useEffect(() => {
@@ -142,21 +119,21 @@ const Products = () => {
         // Handle subcategory - either from URL or selected filters
         if (subcategory) {
           params.subcategory = subcategory;
-        } else if (appliedSubcategories.length > 0) {
-          params.subcategories = appliedSubcategories.join(',');
+        } else if (selectedSubcategories.length > 0) {
+          params.subcategories = selectedSubcategories.join(',');
         }
         
-        // Add price filters (use applied price range)
-        if (appliedPriceRange[0] > minPrice) {
-          params.minPrice = appliedPriceRange[0].toString();
+        // Add price filters
+        if (priceRange[0] > minPrice) {
+          params.minPrice = priceRange[0].toString();
         }
-        if (appliedPriceRange[1] < maxPrice) {
-          params.maxPrice = appliedPriceRange[1].toString();
+        if (priceRange[1] < maxPrice) {
+          params.maxPrice = priceRange[1].toString();
         }
         
         // Add rating filter (use minimum selected rating)
-        if (appliedRatings.length > 0) {
-          const minRating = Math.min(...appliedRatings);
+        if (selectedRatings.length > 0) {
+          const minRating = Math.min(...selectedRatings);
           params.minRating = minRating.toString();
         }
         
@@ -185,7 +162,7 @@ const Products = () => {
     };
 
     fetchProducts();
-  }, [subcategory, sortOption, appliedPriceRange, appliedRatings, appliedSubcategories, minPrice, maxPrice]);
+  }, [subcategory, sortOption, priceRange, selectedRatings, selectedSubcategories, minPrice, maxPrice]);
 
   if (loading) {
     return (
@@ -214,22 +191,25 @@ const Products = () => {
     );
   }
 
+  if (products.length === 0) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-gray-600">No products found</p>
+          {subcategory && (
+            <p className="text-sm text-gray-500 mt-2">
+              No products found in the "{subcategory}" category
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Header with Filters and Sort */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {subcategory 
-              ? subcategory.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())
-              : "All Products"}
-          </h2>
-          {products.length > 0 && (
-            <span className="text-sm text-gray-500">
-              ({products.length} {products.length === 1 ? "product" : "products"})
-            </span>
-          )}
-        </div>
         <div className="flex items-center gap-3">
           <Button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -244,100 +224,39 @@ const Products = () => {
               </span>
             )}
           </Button>
-          <SortDropdown selected={sortOption} setSelected={setSortOption} />
+          <h2 className="text-2xl font-bold text-gray-900">
+            {subcategory 
+              ? subcategory.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())
+              : "All Products"}
+          </h2>
+          {products.length > 0 && (
+            <span className="text-sm text-gray-500">
+              ({products.length} {products.length === 1 ? "product" : "products"})
+            </span>
+          )}
         </div>
+        <SortDropdown selected={sortOption} setSelected={setSortOption} />
       </div>
 
-      {/* Active Filters Chips */}
-      {activeFiltersCount > 0 && (
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          {/* Price Range Filter */}
-          {(appliedPriceRange[0] !== minPrice || appliedPriceRange[1] !== maxPrice) && (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-900 rounded-full border border-amber-300 shadow-sm">
-              <span className="text-sm font-medium">
-                Price: ₹{appliedPriceRange[0].toLocaleString()} - ₹{appliedPriceRange[1].toLocaleString()}
-              </span>
-              <button
-                onClick={() => {
-                  setAppliedPriceRange([minPrice, maxPrice]);
-                  setPendingPriceRange([minPrice, maxPrice]);
-                }}
-                className="ml-1 p-0.5 hover:bg-amber-200 rounded-full transition-colors"
-                aria-label="Remove price filter"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          )}
+      <div className="flex gap-6">
+        {/* Filter Sidebar */}
+        <FilterSidebar
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          priceRange={priceRange}
+          onPriceRangeChange={setPriceRange}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          selectedRatings={selectedRatings}
+          onRatingChange={setSelectedRatings}
+          selectedSubcategories={selectedSubcategories}
+          onSubcategoryChange={setSelectedSubcategories}
+          availableSubcategories={availableSubcategories}
+          activeFiltersCount={activeFiltersCount}
+        />
 
-          {/* Rating Filters */}
-          {appliedRatings.map((rating) => (
-            <div
-              key={rating}
-              className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-900 rounded-full border border-amber-300 shadow-sm"
-            >
-              <span className="text-sm font-medium">
-                {rating === 5 ? "5 Stars" : `${rating}+ Stars`}
-              </span>
-              <button
-                onClick={() => {
-                  const newRatings = appliedRatings.filter((r) => r !== rating);
-                  setAppliedRatings(newRatings);
-                  setPendingRatings(newRatings);
-                }}
-                className="ml-1 p-0.5 hover:bg-amber-200 rounded-full transition-colors"
-                aria-label={`Remove ${rating} star filter`}
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ))}
-
-          {/* Subcategory Filters */}
-          {appliedSubcategories.map((subcategory) => (
-            <div
-              key={subcategory}
-              className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-900 rounded-full border border-amber-300 shadow-sm"
-            >
-              <span className="text-sm font-medium capitalize">
-                {subcategory.replace(/-/g, " ")}
-              </span>
-              <button
-                onClick={() => {
-                  const newSubcategories = appliedSubcategories.filter((s) => s !== subcategory);
-                  setAppliedSubcategories(newSubcategories);
-                  setPendingSubcategories(newSubcategories);
-                }}
-                className="ml-1 p-0.5 hover:bg-amber-200 rounded-full transition-colors"
-                aria-label={`Remove ${subcategory} filter`}
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Filter Sidebar - Full width on mobile, right-aligned modal on desktop */}
-      <FilterSidebar
-        isOpen={isFilterOpen}
-        onClose={() => setIsFilterOpen(false)}
-        priceRange={pendingPriceRange}
-        onPriceRangeChange={setPendingPriceRange}
-        minPrice={minPrice}
-        maxPrice={maxPrice}
-        selectedRatings={pendingRatings}
-        onRatingChange={setPendingRatings}
-        selectedSubcategories={pendingSubcategories}
-        onSubcategoryChange={setPendingSubcategories}
-        availableSubcategories={availableSubcategories}
-        activeFiltersCount={activeFiltersCount}
-        hasPendingChanges={hasPendingChanges}
-        onApplyFilters={handleApplyFilters}
-      />
-
-      {/* Products Grid - Centered, full width on desktop when filter is modal */}
-      <div className="w-full">
+        {/* Products Grid - Centered */}
+        <div className="flex-1 min-w-0">
           {products.length > 0 ? (
             <div className={`flex flex-wrap gap-6 ${
               isFilterOpen ? "justify-center lg:justify-start" : "justify-center"
@@ -364,33 +283,22 @@ const Products = () => {
         ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center min-h-[400px] text-center py-12">
-              <div className="mb-6">
-                <p className="text-gray-900 text-xl font-semibold mb-2">No products found</p>
-                {activeFiltersCount > 0 ? (
-                  <p className="text-sm text-gray-600">
-                    No products match your current filters. Remove filters above to see more products.
-                  </p>
-                ) : (
-                  <p className="text-sm text-gray-600">
-                    {subcategory 
-                      ? `No products found in the "${subcategory.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}" category`
-                      : "No products available at the moment"}
-                  </p>
-                )}
-              </div>
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+              <p className="text-gray-600 text-lg mb-2">No products found</p>
+              {activeFiltersCount > 0 && (
+                <p className="text-sm text-gray-500 mb-4">
+                  Try adjusting your filters
+                </p>
+              )}
               {activeFiltersCount > 0 && (
                 <Button
                   onClick={() => {
-                    setAppliedPriceRange([minPrice, maxPrice]);
-                    setAppliedRatings([]);
-                    setAppliedSubcategories([]);
-                    setPendingPriceRange([minPrice, maxPrice]);
-                    setPendingRatings([]);
-                    setPendingSubcategories([]);
+                    setPriceRange([minPrice, maxPrice]);
+                    setSelectedRatings([]);
+                    setSelectedSubcategories([]);
                   }}
                   variant="outline"
-                  className="mt-2 border-2 border-amber-500 text-amber-700 hover:bg-amber-50"
+                  className="mt-4"
                 >
                   Clear All Filters
                 </Button>
@@ -398,6 +306,7 @@ const Products = () => {
             </div>
           )}
         </div>
+      </div>
     </div>
   );
 };

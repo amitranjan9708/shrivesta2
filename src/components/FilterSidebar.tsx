@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Slider } from "./ui/slider";
 import { Checkbox } from "./ui/checkbox";
 import { Button } from "./ui/button";
@@ -17,8 +17,6 @@ interface FilterSidebarProps {
   onSubcategoryChange: (subcategories: string[]) => void;
   availableSubcategories: string[];
   activeFiltersCount: number;
-  hasPendingChanges?: boolean;
-  onApplyFilters?: () => void;
 }
 
 export const FilterSidebar: React.FC<FilterSidebarProps> = ({
@@ -34,19 +32,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   onSubcategoryChange,
   availableSubcategories,
   activeFiltersCount,
-  hasPendingChanges = false,
-  onApplyFilters,
 }) => {
-  // Local state for input values to allow free typing
-  const [minPriceInput, setMinPriceInput] = useState<string>(priceRange[0].toString());
-  const [maxPriceInput, setMaxPriceInput] = useState<string>(priceRange[1].toString());
-
-  // Update local state when priceRange prop changes (from slider or external)
-  useEffect(() => {
-    setMinPriceInput(priceRange[0].toString());
-    setMaxPriceInput(priceRange[1].toString());
-  }, [priceRange]);
-
   const handleRatingToggle = (rating: number) => {
     if (selectedRatings.includes(rating)) {
       onRatingChange(selectedRatings.filter((r) => r !== rating));
@@ -71,18 +57,18 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
   return (
     <>
-      {/* Overlay - only on desktop when open */}
+      {/* Overlay - only on mobile */}
       {isOpen && (
         <div
-          className="hidden lg:block fixed inset-0 bg-black/30 z-40"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={onClose}
         />
       )}
       
-      {/* Sidebar - full width on mobile (when open), right-aligned modal on desktop */}
+      {/* Sidebar - conditional on both mobile and desktop */}
       <div className={`${
-        isOpen ? "block" : "hidden"
-      } w-full lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:w-80 lg:z-50 bg-gradient-to-b from-white to-gray-50 shadow-2xl overflow-y-auto lg:rounded-l-xl lg:border-2 lg:border-gray-200 mb-6 lg:mb-0 lg:mt-0 lg:h-screen rounded-xl border-2 border-gray-200`}>
+        isOpen ? "fixed lg:block" : "hidden"
+      } left-0 top-0 h-full w-80 bg-gradient-to-b from-white to-gray-50 shadow-2xl z-50 overflow-y-auto lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:z-10 lg:rounded-xl lg:border-2 lg:border-gray-200 lg:shadow-lg`}>
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-200">
@@ -103,8 +89,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-all hover:scale-110 active:scale-95"
-              aria-label="Close filters"
+              className="lg:hidden p-2 hover:bg-gray-100 rounded-full transition-all hover:scale-110 active:scale-95"
             >
               <X className="h-5 w-5 text-gray-600" />
             </button>
@@ -147,20 +132,10 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
                     <input
                       type="number"
-                      value={minPriceInput}
+                      value={priceRange[0]}
                       onChange={(e) => {
-                        setMinPriceInput(e.target.value);
-                      }}
-                      onBlur={(e) => {
-                        const inputValue = e.target.value.trim();
-                        if (inputValue === "" || isNaN(Number(inputValue))) {
-                          setMinPriceInput(priceRange[0].toString());
-                          return;
-                        }
-                        const numValue = Number(inputValue);
-                        const clampedValue = Math.max(minPrice, Math.min(maxPrice, numValue));
-                        setMinPriceInput(clampedValue.toString());
-                        onPriceRangeChange([clampedValue, priceRange[1]]);
+                        const value = Math.max(minPrice, Math.min(maxPrice, Number(e.target.value)));
+                        onPriceRangeChange([value, priceRange[1]]);
                       }}
                       className="w-full pl-8 pr-3 py-2.5 border-2 border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-gray-50 hover:bg-white"
                     />
@@ -173,20 +148,10 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
                     <input
                       type="number"
-                      value={maxPriceInput}
+                      value={priceRange[1]}
                       onChange={(e) => {
-                        setMaxPriceInput(e.target.value);
-                      }}
-                      onBlur={(e) => {
-                        const inputValue = e.target.value.trim();
-                        if (inputValue === "" || isNaN(Number(inputValue))) {
-                          setMaxPriceInput(priceRange[1].toString());
-                          return;
-                        }
-                        const numValue = Number(inputValue);
-                        const clampedValue = Math.max(minPrice, Math.min(maxPrice, numValue));
-                        setMaxPriceInput(clampedValue.toString());
-                        onPriceRangeChange([priceRange[0], clampedValue]);
+                        const value = Math.max(minPrice, Math.min(maxPrice, Number(e.target.value)));
+                        onPriceRangeChange([priceRange[0], value]);
                       }}
                       className="w-full pl-8 pr-3 py-2.5 border-2 border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-gray-50 hover:bg-white"
                     />
@@ -286,27 +251,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                   );
                 })}
               </div>
-            </div>
-          )}
-          
-          {/* Apply Filters Button */}
-          {onApplyFilters && (
-            <div className="sticky bottom-0 bg-gradient-to-b from-transparent via-white to-white pt-4 pb-4 border-t-2 border-gray-200 mt-6">
-              <Button
-                onClick={() => {
-                  onApplyFilters();
-                  onClose();
-                }}
-                disabled={!hasPendingChanges}
-                className="w-full py-3 text-base font-semibold bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Apply Filters
-                {hasPendingChanges && (
-                  <span className="ml-2 px-2 py-0.5 bg-white/30 rounded-full text-xs">
-                    {activeFiltersCount > 0 ? "Update" : "Apply"}
-                  </span>
-                )}
-              </Button>
             </div>
           )}
           
