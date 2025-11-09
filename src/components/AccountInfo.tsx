@@ -9,13 +9,13 @@ import { AccountLayout } from './AccountLayout';
 
 export function AccountDashboard() {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [shippingAddress, setShippingAddress] = useState<string | null>(null);
   const [pincode, setPincode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       navigate('/login');
       return;
     }
@@ -38,10 +38,12 @@ export function AccountDashboard() {
       }
     };
 
-    fetchShippingAddress();
-  }, [isAuthenticated, navigate]);
+    if (isAuthenticated && !isLoading) {
+      fetchShippingAddress();
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
-  if (!user) {
+  if (isLoading || !user) {
     return (
       <AccountLayout>
         <LoadingContainer>

@@ -8,7 +8,7 @@ import { AccountLayout } from './AccountLayout';
 
 export function ShippingAddressPage() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [shippingAddress, setShippingAddress] = useState('');
   const [pincode, setPincode] = useState('');
   const [loading, setLoading] = useState(true);
@@ -17,8 +17,12 @@ export function ShippingAddressPage() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       navigate('/login');
+      return;
+    }
+
+    if (isLoading || !isAuthenticated) {
       return;
     }
 
@@ -45,7 +49,7 @@ export function ShippingAddressPage() {
     };
 
     fetchShippingAddress();
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

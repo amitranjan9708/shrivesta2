@@ -7,6 +7,20 @@ import { useAuth } from "../contexts/AuthContext";
 
 // Add CSS for mobile full-width cart items
 const cartMobileStyles = `
+  /* Base styles - Desktop first */
+  .cart-item-mobile,
+  .cart-item-content-mobile {
+    display: none !important;
+  }
+  .cart-item-desktop {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1.5rem !important;
+    padding: 1.5rem !important;
+    width: 100% !important;
+  }
+  
+  /* Mobile overrides */
   @media (max-width: 767px) {
     .cart-container-mobile {
       padding-left: 0 !important;
@@ -26,14 +40,6 @@ const cartMobileStyles = `
     }
     .cart-item-desktop {
       display: none !important;
-    }
-  }
-  @media (min-width: 768px) {
-    .cart-item-mobile {
-      display: none !important;
-    }
-    .cart-item-desktop {
-      display: flex !important;
     }
   }
 `;
@@ -60,19 +66,19 @@ interface CartItem {
 
 export function CartPage() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (after auth check completes)
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       navigate("/login");
       return;
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
   // Refresh cart function
   const refreshCart = useCallback(async () => {
@@ -236,6 +242,18 @@ export function CartPage() {
     return calculateSubtotal() + calculateShipping();
   };
 
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return null; // Will redirect to login
   }
@@ -347,10 +365,11 @@ export function CartPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-8" style={{ gap: '0' }}>
-          {/* Cart Items */}
-          <div className="lg:col-span-2">
-            <div className="bg-white md:rounded-xl shadow-md overflow-hidden" style={{ borderRadius: '0' }}>
+        <div className="px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+          {/* Cart Items - Left Side */}
+          <div className="w-full lg:w-auto lg:flex-1 min-w-0">
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
               {cartItems.length === 0 ? (
                   <div className="p-12 text-center">
                   <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -367,9 +386,9 @@ export function CartPage() {
                   {cartItems.map((item, index) => (
                     <div
                       key={`${item.id}-${item.productId}-${index}`}
-                      className="cart-item-mobile"
                     >
                       {/* Mobile Layout - Vertical Stack - Everything below image */}
+                      <div className="cart-item-mobile">
                       <div className="cart-item-content-mobile">
                         {/* Image - Full width on mobile, at the top */}
                         <div style={{ width: '100%', marginBottom: '20px', display: 'block' }}>
@@ -553,77 +572,319 @@ export function CartPage() {
                           </button>
                         </div>
                       </div>
+                      </div>
 
                       {/* Desktop Layout - Horizontal */}
-                      <div className="cart-item-desktop hidden md:flex items-center gap-6">
+                      <div 
+                        className="cart-item-desktop" 
+                        style={{
+                          background: 'linear-gradient(to right, #ffffff, #fefce8)',
+                          borderRadius: '12px',
+                          padding: '1.5rem',
+                          transition: 'all 0.3s ease',
+                          border: '1px solid #fde68a',
+                          boxShadow: '0 2px 8px rgba(251, 191, 36, 0.1)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.boxShadow = '0 8px 24px rgba(251, 191, 36, 0.2)';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.borderColor = '#fbbf24';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(251, 191, 36, 0.1)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.borderColor = '#fde68a';
+                        }}
+                      >
                         {/* Image - Larger on desktop */}
-                        <div className="flex-shrink-0">
+                        <div style={{ 
+                          flexShrink: 0,
+                          position: 'relative',
+                          overflow: 'hidden',
+                          borderRadius: '12px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                        }}>
                           <img
                             src={item.image || '/placeholder.png'}
                             alt={item.name}
-                            className="w-40 h-40 lg:w-48 lg:h-48 object-cover rounded-lg border border-gray-200"
+                            style={{ 
+                              width: '180px', 
+                              height: '180px', 
+                              objectFit: 'cover', 
+                              borderRadius: '12px',
+                              border: '2px solid #fbbf24',
+                              transition: 'transform 0.3s ease'
+                            }}
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = '/placeholder.png';
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'scale(1)';
                             }}
                           />
                         </div>
 
                         {/* Product Info - Middle Section */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                            {item.name}
-                          </h3>
-                          <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
-                            {item.size && <span>Size: {item.size}</span>}
-                            {item.color && <span>Color: {item.color}</span>}
+                        <div style={{ 
+                          flex: 1, 
+                          minWidth: 0, 
+                          paddingLeft: '1.5rem',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between'
+                        }}>
+                          {/* Top Section: Name and Attributes */}
+                          <div>
+                            <h3 style={{ 
+                              fontSize: '1.5rem', 
+                              fontWeight: '700', 
+                              color: '#111827', 
+                              marginBottom: '0.75rem',
+                              letterSpacing: '-0.025em',
+                              lineHeight: '1.3',
+                              marginTop: 0
+                            }}>
+                              {item.name}
+                            </h3>
+                            {(item.size || item.color) && (
+                              <div style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '0.75rem', 
+                                fontSize: '0.875rem', 
+                                color: '#6b7280', 
+                                marginBottom: '1.25rem',
+                                flexWrap: 'wrap'
+                              }}>
+                                {item.size && (
+                                  <span style={{
+                                    padding: '0.375rem 0.875rem',
+                                    background: '#fef3c7',
+                                    borderRadius: '8px',
+                                    fontWeight: '600',
+                                    border: '1px solid #fde68a',
+                                    fontSize: '0.8125rem'
+                                  }}>
+                                    Size: {item.size}
+                                  </span>
+                                )}
+                                {item.color && (
+                                  <span style={{
+                                    padding: '0.375rem 0.875rem',
+                                    background: '#fef3c7',
+                                    borderRadius: '8px',
+                                    fontWeight: '600',
+                                    border: '1px solid #fde68a',
+                                    fontSize: '0.8125rem'
+                                  }}>
+                                    Color: {item.color}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
 
-                          {/* Quantity Controls - Desktop */}
-                          <div className="flex items-center space-x-3">
-                            <button
-                              onClick={() =>
-                                updateQuantity(item.productId, item.quantity - 1)
-                              }
-                              disabled={updating === item.productId}
-                              className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-amber-50 hover:border-amber-400 disabled:opacity-50 transition-colors"
-                            >
-                              <Minus className="h-4 w-4" />
-                            </button>
-
-                            <span className="w-12 text-center font-semibold text-lg">
-                              {item.quantity}
+                          {/* Bottom Section: Quantity Controls */}
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.75rem',
+                            marginTop: 'auto'
+                          }}>
+                            <span style={{ 
+                              fontSize: '0.9375rem', 
+                              fontWeight: '600', 
+                              color: '#92400e',
+                              marginRight: '0.25rem'
+                            }}>
+                              Quantity:
                             </span>
+                            <div style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '0.5rem',
+                              padding: '0.5rem',
+                              background: 'white',
+                              borderRadius: '10px',
+                              border: '2px solid #fde68a',
+                              boxShadow: '0 2px 4px rgba(251, 191, 36, 0.1)'
+                            }}>
+                              <button
+                                onClick={() =>
+                                  updateQuantity(item.productId, item.quantity - 1)
+                                }
+                                disabled={updating === item.productId}
+                                style={{
+                                  width: '2.25rem',
+                                  height: '2.25rem',
+                                  borderRadius: '8px',
+                                  border: 'none',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  cursor: updating === item.productId ? 'not-allowed' : 'pointer',
+                                  opacity: updating === item.productId ? 0.5 : 1,
+                                  backgroundColor: '#fef3c7',
+                                  transition: 'all 0.2s',
+                                  color: '#92400e',
+                                  fontWeight: 'bold'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!updating) {
+                                    e.currentTarget.style.backgroundColor = '#fbbf24';
+                                    e.currentTarget.style.color = 'white';
+                                    e.currentTarget.style.transform = 'scale(1.05)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#fef3c7';
+                                  e.currentTarget.style.color = '#92400e';
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                }}
+                              >
+                                <Minus className="h-4 w-4" />
+                              </button>
 
-                            <button
-                              onClick={() =>
-                                updateQuantity(item.productId, item.quantity + 1)
-                              }
-                              disabled={updating === item.productId}
-                              className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-amber-50 hover:border-amber-400 disabled:opacity-50 transition-colors"
-                            >
-                              <Plus className="h-4 w-4" />
-                            </button>
+                              <span style={{ 
+                                width: '2.5rem', 
+                                textAlign: 'center', 
+                                fontWeight: '700', 
+                                fontSize: '1.125rem',
+                                color: '#92400e'
+                              }}>
+                                {item.quantity}
+                              </span>
+
+                              <button
+                                onClick={() =>
+                                  updateQuantity(item.productId, item.quantity + 1)
+                                }
+                                disabled={updating === item.productId}
+                                style={{
+                                  width: '2.25rem',
+                                  height: '2.25rem',
+                                  borderRadius: '8px',
+                                  border: 'none',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  cursor: updating === item.productId ? 'not-allowed' : 'pointer',
+                                  opacity: updating === item.productId ? 0.5 : 1,
+                                  backgroundColor: '#fef3c7',
+                                  transition: 'all 0.2s',
+                                  color: '#92400e',
+                                  fontWeight: 'bold'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!updating) {
+                                    e.currentTarget.style.backgroundColor = '#fbbf24';
+                                    e.currentTarget.style.color = 'white';
+                                    e.currentTarget.style.transform = 'scale(1.05)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#fef3c7';
+                                  e.currentTarget.style.color = '#92400e';
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                }}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </button>
+                            </div>
                           </div>
                         </div>
 
                         {/* Price - Desktop */}
-                        <div className="flex-shrink-0 text-right mr-4">
-                          <div className="text-2xl font-bold text-gray-900 mb-1">
+                        <div style={{ 
+                          flexShrink: 0, 
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'flex-start',
+                          alignItems: 'flex-end',
+                          paddingLeft: '1.5rem',
+                          paddingRight: '1rem',
+                          minWidth: '180px'
+                        }}>
+                          {/* Current Price */}
+                          <div style={{ 
+                            fontSize: '1.875rem', 
+                            fontWeight: '800', 
+                            color: '#92400e',
+                            marginBottom: '0.5rem',
+                            letterSpacing: '-0.025em',
+                            lineHeight: '1.2'
+                          }}>
                             ₹{(item.price * item.quantity).toLocaleString()}
                           </div>
-                          {item.originalPrice &&
-                            item.originalPrice > item.price && (
-                              <div className="text-sm text-gray-500 line-through">
+                          
+                          {/* Original Price and Savings */}
+                          {item.originalPrice && item.originalPrice > item.price && (
+                            <div style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'flex-end',
+                              gap: '0.375rem'
+                            }}>
+                              <div style={{ 
+                                fontSize: '1rem', 
+                                color: '#9ca3af', 
+                                textDecoration: 'line-through',
+                                lineHeight: '1.2'
+                              }}>
                                 ₹{(item.originalPrice * item.quantity).toLocaleString()}
                               </div>
-                            )}
+                              <div style={{
+                                fontSize: '0.8125rem',
+                                color: '#059669',
+                                fontWeight: '700',
+                                padding: '0.375rem 0.75rem',
+                                background: '#d1fae5',
+                                borderRadius: '8px',
+                                border: '1px solid #86efac',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                Save ₹{((item.originalPrice - item.price) * item.quantity).toLocaleString()}
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* Delete Button - Desktop */}
                         <button
                           onClick={() => removeItem(item.productId)}
                           disabled={updating === item.productId}
-                          className="flex-shrink-0 p-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg disabled:opacity-50 transition-colors"
+                          title="Remove from cart"
+                          style={{
+                            flexShrink: 0,
+                            padding: '0.875rem',
+                            color: '#dc2626',
+                            backgroundColor: '#fef2f2',
+                            borderRadius: '12px',
+                            cursor: updating === item.productId ? 'not-allowed' : 'pointer',
+                            opacity: updating === item.productId ? 0.5 : 1,
+                            border: '2px solid #fecaca',
+                            transition: 'all 0.3s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!updating) {
+                              e.currentTarget.style.backgroundColor = '#dc2626';
+                              e.currentTarget.style.color = 'white';
+                              e.currentTarget.style.borderColor = '#dc2626';
+                              e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#fef2f2';
+                            e.currentTarget.style.color = '#dc2626';
+                            e.currentTarget.style.borderColor = '#fecaca';
+                            e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+                          }}
                         >
                           <Trash2 className="h-5 w-5" />
                         </button>
@@ -635,9 +896,9 @@ export function CartPage() {
             </div>
           </div>
 
-          {/* Order Summary */}
-          <div className="lg:col-span-1 px-4 sm:px-6 lg:px-0">
-            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-8 border-2 border-amber-100">
+          {/* Order Summary - Right Side */}
+          <div className="w-full lg:w-96 lg:flex-shrink-0">
+            <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-amber-100 lg:sticky lg:top-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
                 Order Summary
               </h2>
@@ -732,6 +993,7 @@ export function CartPage() {
             </div>
           </div>
         )}
+        </div>
         </div>
       </div>
     </>

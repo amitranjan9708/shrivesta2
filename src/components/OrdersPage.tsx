@@ -36,14 +36,18 @@ interface Order {
 
 export function OrdersPage() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       navigate('/login');
+      return;
+    }
+
+    if (isLoading || !isAuthenticated) {
       return;
     }
 
@@ -65,7 +69,7 @@ export function OrdersPage() {
     };
 
     fetchOrders();
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
