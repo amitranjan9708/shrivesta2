@@ -5,7 +5,55 @@ import { FilterSidebar } from "./FilterSidebar";
 import { Button } from "./ui/button";
 import { Link, useSearchParams } from "react-router-dom";
 import { apiService } from "../services/api";
-import { Filter } from "lucide-react";
+import { Filter, ArrowLeft } from "lucide-react";
+
+// Mobile styles for products page
+const productsMobileStyles = `
+  @media (max-width: 767px) {
+    .products-page-wrapper {
+      padding-top: 0 !important;
+      background: #f5f5f5 !important;
+    }
+    .products-container {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      padding-top: 0 !important;
+      max-width: 100% !important;
+      background: #f5f5f5 !important;
+    }
+    .products-header-card {
+      background: white !important;
+      border-radius: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 14px 16px !important;
+      margin-bottom: 8px !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .products-header-card h2 {
+      font-size: 14px !important;
+      font-weight: 500 !important;
+      color: #000000 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .products-header-card span {
+      font-size: 12px !important;
+      color: #666 !important;
+      font-weight: 400 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .products-grid {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 8px !important;
+      padding: 0 8px !important;
+      background: #f5f5f5 !important;
+    }
+    .product-card-wrapper {
+      width: 100% !important;
+    }
+  }
+`;
 
 interface Product {
   id: number;
@@ -207,38 +255,87 @@ const Products = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Header with Filters and Sort */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Filter className="h-4 w-4" />
-            Filters
-            {activeFiltersCount > 0 && (
-              <span className="ml-1 px-2 py-0.5 bg-amber-500 text-white text-xs font-semibold rounded-full">
-                {activeFiltersCount}
+    <>
+      <style>{productsMobileStyles}</style>
+      <div className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 py-0 lg:py-6 products-page-wrapper">
+        <div className="products-container">
+          {/* Myntra-style Mobile Header */}
+          <div className="md:hidden mb-2">
+            <div className="bg-white px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Link to="/" className="text-black">
+                  <ArrowLeft className="h-5 w-5" />
+                </Link>
+                <span style={{ fontSize: '14px', fontWeight: '500', color: '#000', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                  {subcategory 
+                    ? subcategory.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())
+                    : "ALL PRODUCTS"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Header with Filters and Sort */}
+          <div className="hidden md:flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Filters
+                {activeFiltersCount > 0 && (
+                  <span className="ml-1 px-2 py-0.5 bg-amber-500 text-white text-xs font-semibold rounded-full">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {subcategory 
+                  ? subcategory.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())
+                  : "All Products"}
+              </h2>
+              {products.length > 0 && (
+                <span className="text-sm text-gray-500">
+                  ({products.length} {products.length === 1 ? "product" : "products"})
+                </span>
+              )}
+            </div>
+            <SortDropdown selected={sortOption} setSelected={setSortOption} />
+          </div>
+
+          {/* Mobile Filter and Sort Bar */}
+          <div className="md:hidden mb-2 products-header-card">
+            <div className="flex items-center justify-between mb-3">
+              <Button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                variant="outline"
+                className="flex items-center gap-2"
+                style={{
+                  fontSize: '12px',
+                  padding: '8px 12px',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+                }}
+              >
+                <Filter className="h-4 w-4" />
+                Filters
+                {activeFiltersCount > 0 && (
+                  <span className="ml-1 px-2 py-0.5 bg-amber-500 text-white text-xs font-semibold rounded-full">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
+              <SortDropdown selected={sortOption} setSelected={setSortOption} />
+            </div>
+            {products.length > 0 && (
+              <span style={{ fontSize: '12px', color: '#666', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                {products.length} {products.length === 1 ? "product" : "products"}
               </span>
             )}
-          </Button>
-          <h2 className="text-2xl font-bold text-gray-900">
-            {subcategory 
-              ? subcategory.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())
-              : "All Products"}
-          </h2>
-          {products.length > 0 && (
-            <span className="text-sm text-gray-500">
-              ({products.length} {products.length === 1 ? "product" : "products"})
-            </span>
-          )}
-        </div>
-        <SortDropdown selected={sortOption} setSelected={setSortOption} />
-      </div>
+          </div>
 
-      <div className="flex gap-6">
+      <div className="flex gap-6 md:flex md:gap-6">
         {/* Filter Sidebar */}
         <FilterSidebar
           isOpen={isFilterOpen}
@@ -256,16 +353,16 @@ const Products = () => {
         />
 
         {/* Products Grid - Centered */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 md:flex-1 md:min-w-0">
           {products.length > 0 ? (
-            <div className={`flex flex-wrap gap-6 ${
+            <div className={`products-grid flex flex-wrap gap-6 md:flex md:flex-wrap md:gap-6 ${
               isFilterOpen ? "justify-center lg:justify-start" : "justify-center"
             }`}>
         {products.map((product) => (
           <Link
             to={`/products/${product.id}`}
             key={product.id}
-            className="block"
+            className="block product-card-wrapper md:block"
             style={{ textDecoration: "none", color: "inherit" }}
           >
             <ProductCard
@@ -307,7 +404,9 @@ const Products = () => {
           )}
         </div>
       </div>
+      </div>
     </div>
+    </>
   );
 };
 
