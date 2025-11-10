@@ -844,18 +844,87 @@ export function OrderConfirmationPage() {
                 {/* Action Buttons */}
                 <div className="mt-6 space-y-3 print:hidden">
                   <Link to="/products" className="block">
-                    <Button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 h-11 text-sm font-medium">
-                      <ShoppingBag className="h-4 w-4 mr-2" />
+                    <Button 
+                      className="w-full flex items-center justify-center gap-2"
+                      style={{
+                        background: 'linear-gradient(to right, #F59E0B, #FBBF24)',
+                        color: '#000',
+                        padding: '16px 32px',
+                        borderRadius: '9999px',
+                        fontSize: '1.125rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s',
+                        boxShadow: '0 10px 15px rgba(0,0,0,0.2)',
+                        border: 'none'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = '0 12px 20px rgba(0,0,0,0.3)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      <ShoppingBag className="h-4 w-4" />
                       Continue Shopping
                     </Button>
                   </Link>
                   <Link to="/account/orders" className="block">
-                    <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white h-11 text-sm font-medium">
+                    <Button 
+                      className="w-full"
+                      style={{
+                        background: 'linear-gradient(to right, #F59E0B, #FBBF24)',
+                        color: '#000',
+                        padding: '16px 32px',
+                        borderRadius: '9999px',
+                        fontSize: '1.125rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s',
+                        boxShadow: '0 10px 15px rgba(0,0,0,0.2)',
+                        border: 'none'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = '0 12px 20px rgba(0,0,0,0.3)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
                       View All Orders
                     </Button>
                   </Link>
                   <Link to={`/account/orders`} className="block">
-                    <Button variant="outline" className="w-full h-11 text-sm font-medium border-gray-300">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      style={{
+                        background: 'white',
+                        color: '#111827',
+                        padding: '16px 32px',
+                        borderRadius: '9999px',
+                        fontSize: '1.125rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s',
+                        border: '2px solid #e5e7eb',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#F59E0B';
+                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#e5e7eb';
+                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
                       Track This Order
                     </Button>
                   </Link>

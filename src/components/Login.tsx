@@ -399,13 +399,27 @@ const BackToLogin = styled.span`
 
 const SubmitButton = styled.button`
   width: 100%;
-  padding: 10px;
-  background: linear-gradient(to right, #f59e0b, #facc15);
+  padding: 16px 32px;
+  background: linear-gradient(to right, #F59E0B, #FBBF24);
   border: none;
-  color: white;
-  border-radius: 10px;
-  font-size: 16px;
+  color: #000;
+  border-radius: 9999px;
+  font-size: 1.125rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+  
+  &:hover:not(:disabled) {
+    box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+    transform: translateY(-2px);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: linear-gradient(to right, #d1d5db, #9ca3af);
+  }
 `;
 
 const SignupText = styled.p`

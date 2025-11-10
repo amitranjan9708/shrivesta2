@@ -343,7 +343,7 @@ export function CartPage() {
         {/* Header with padding on mobile */}
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">Shopping Cart</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Shopping Cart</h1>
               <div className="flex items-center gap-4">
             <button
               onClick={refreshCart}
@@ -376,7 +376,28 @@ export function CartPage() {
                   <p className="text-gray-500 text-lg mb-2">Your cart is empty</p>
                   <p className="text-sm text-gray-400 mb-6">Add some items to get started</p>
                   <Link to="/products">
-                    <button className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    <button 
+                      style={{
+                        background: 'linear-gradient(to right, #F59E0B, #FBBF24)',
+                        color: '#000',
+                        padding: '16px 32px',
+                        borderRadius: '9999px',
+                        fontSize: '1.125rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s',
+                        boxShadow: '0 10px 15px rgba(0,0,0,0.2)',
+                        border: 'none'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = '0 12px 20px rgba(0,0,0,0.3)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
                       Browse Products
                     </button>
                   </Link>
@@ -471,23 +492,29 @@ export function CartPage() {
                                 width: '48px',
                                 height: '48px',
                                 borderRadius: '50%',
-                                border: '2px solid #d1d5db',
+                                border: 'none',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                backgroundColor: 'white',
+                                background: updating === item.productId 
+                                  ? 'linear-gradient(to right, #d1d5db, #9ca3af)' 
+                                  : 'linear-gradient(to right, #F59E0B, #FBBF24)',
                                 cursor: updating === item.productId ? 'not-allowed' : 'pointer',
-                                opacity: updating === item.productId ? 0.5 : 1
+                                opacity: updating === item.productId ? 0.6 : 1,
+                                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                                transition: 'all 0.3s',
+                                color: '#000',
+                                fontWeight: 'bold'
                               }}
                               onMouseEnter={(e) => {
                                 if (!updating) {
-                                  e.currentTarget.style.backgroundColor = '#fef3c7';
-                                  e.currentTarget.style.borderColor = '#f59e0b';
+                                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.3)';
+                                  e.currentTarget.style.transform = 'scale(1.05)';
                                 }
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'white';
-                                e.currentTarget.style.borderColor = '#d1d5db';
+                                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+                                e.currentTarget.style.transform = 'scale(1)';
                               }}
                             >
                               <Minus className="h-5 w-5" />
@@ -512,23 +539,29 @@ export function CartPage() {
                                 width: '48px',
                                 height: '48px',
                                 borderRadius: '50%',
-                                border: '2px solid #d1d5db',
+                                border: 'none',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                backgroundColor: 'white',
+                                background: updating === item.productId 
+                                  ? 'linear-gradient(to right, #d1d5db, #9ca3af)' 
+                                  : 'linear-gradient(to right, #F59E0B, #FBBF24)',
                                 cursor: updating === item.productId ? 'not-allowed' : 'pointer',
-                                opacity: updating === item.productId ? 0.5 : 1
+                                opacity: updating === item.productId ? 0.6 : 1,
+                                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                                transition: 'all 0.3s',
+                                color: '#000',
+                                fontWeight: 'bold'
                               }}
                               onMouseEnter={(e) => {
                                 if (!updating) {
-                                  e.currentTarget.style.backgroundColor = '#fef3c7';
-                                  e.currentTarget.style.borderColor = '#f59e0b';
+                                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.3)';
+                                  e.currentTarget.style.transform = 'scale(1.05)';
                                 }
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'white';
-                                e.currentTarget.style.borderColor = '#d1d5db';
+                                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+                                e.currentTarget.style.transform = 'scale(1)';
                               }}
                             >
                               <Plus className="h-5 w-5" />
@@ -543,28 +576,33 @@ export function CartPage() {
                             disabled={updating === item.productId}
                             style={{
                               width: '100%',
-                              padding: '12px 24px',
-                              color: '#dc2626',
-                              backgroundColor: 'white',
-                              border: '2px solid #fecaca',
-                              borderRadius: '8px',
+                              padding: '14px 24px',
+                              color: '#000',
+                              background: updating === item.productId 
+                                ? 'linear-gradient(to right, #d1d5db, #9ca3af)' 
+                                : 'linear-gradient(to right, #F59E0B, #FBBF24)',
+                              border: 'none',
+                              borderRadius: '9999px',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               gap: '8px',
-                              fontWeight: '500',
+                              fontWeight: 500,
                               cursor: updating === item.productId ? 'not-allowed' : 'pointer',
-                              opacity: updating === item.productId ? 0.5 : 1
+                              opacity: updating === item.productId ? 0.6 : 1,
+                              boxShadow: '0 10px 15px rgba(0,0,0,0.2)',
+                              transition: 'all 0.3s',
+                              fontSize: '1rem'
                             }}
                             onMouseEnter={(e) => {
                               if (!updating) {
-                                e.currentTarget.style.backgroundColor = '#fef2f2';
-                                e.currentTarget.style.color = '#b91c1c';
+                                e.currentTarget.style.boxShadow = '0 12px 20px rgba(0,0,0,0.3)';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
                               }
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'white';
-                              e.currentTarget.style.color = '#dc2626';
+                              e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
+                              e.currentTarget.style.transform = 'translateY(0)';
                             }}
                           >
                             <Trash2 className="h-5 w-5" />
@@ -580,28 +618,19 @@ export function CartPage() {
                         style={{
                           background: 'linear-gradient(to right, #ffffff, #fefce8)',
                           borderRadius: '12px',
-                          padding: '1.5rem',
+                          
                           transition: 'all 0.3s ease',
                           border: '1px solid #fde68a',
                           boxShadow: '0 2px 8px rgba(251, 191, 36, 0.1)'
                         }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.boxShadow = '0 8px 24px rgba(251, 191, 36, 0.2)';
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.borderColor = '#fbbf24';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(251, 191, 36, 0.1)';
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.borderColor = '#fde68a';
-                        }}
+                        
                       >
                         {/* Image - Larger on desktop */}
                         <div style={{ 
                           flexShrink: 0,
                           position: 'relative',
                           overflow: 'hidden',
-                          borderRadius: '12px',
+                          borderRadius: '8px',
                           boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                         }}>
                           <img
@@ -644,7 +673,7 @@ export function CartPage() {
                               color: '#111827', 
                               marginBottom: '0.75rem',
                               letterSpacing: '-0.025em',
-                              lineHeight: '1.3',
+                              
                               marginTop: 0
                             }}>
                               {item.name}
@@ -939,11 +968,29 @@ export function CartPage() {
                     onClick={() => {
                       navigate("/checkout");
                     }}
-                    className="w-full mt-6 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-4 px-6 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] border-2 border-amber-800 flex items-center justify-center gap-2"
+                    className="w-full mt-6 flex items-center justify-center gap-2"
                     style={{ 
+                      background: 'linear-gradient(to right, #F59E0B, #FBBF24)',
+                      color: '#000',
+                      padding: '16px 32px',
+                      borderRadius: '9999px',
+                      fontSize: '1.125rem',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s',
+                      boxShadow: '0 10px 15px rgba(0,0,0,0.2)',
+                      border: 'none',
                       minHeight: '56px',
                       position: 'relative',
                       zIndex: 10
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.boxShadow = '0 12px 20px rgba(0,0,0,0.3)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
+                      e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
                     <span>Proceed to Checkout</span>
@@ -962,7 +1009,29 @@ export function CartPage() {
                   <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500 mb-4">Add items to proceed</p>
                   <Link to="/products">
-                    <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 py-3 px-6 rounded-lg font-semibold transition-colors">
+                    <button 
+                      style={{
+                        width: '100%',
+                        background: 'linear-gradient(to right, #F59E0B, #FBBF24)',
+                        color: '#000',
+                        padding: '16px 32px',
+                        borderRadius: '9999px',
+                        fontSize: '1.125rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s',
+                        boxShadow: '0 10px 15px rgba(0,0,0,0.2)',
+                        border: 'none'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = '0 12px 20px rgba(0,0,0,0.3)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
                       Continue Shopping
                     </button>
                   </Link>
@@ -986,7 +1055,25 @@ export function CartPage() {
                   console.log("Mobile checkout button clicked");
                   navigate("/checkout");
                 }}
-                className="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-3 px-6 rounded-xl font-bold text-lg shadow-lg"
+                className="flex-1"
+                style={{
+                  background: 'linear-gradient(to right, #F59E0B, #FBBF24)',
+                  color: '#000',
+                  padding: '14px 24px',
+                  borderRadius: '9999px',
+                  fontSize: '1rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  boxShadow: '0 10px 15px rgba(0,0,0,0.2)',
+                  border: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 12px 20px rgba(0,0,0,0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
+                }}
               >
                 Checkout
               </button>

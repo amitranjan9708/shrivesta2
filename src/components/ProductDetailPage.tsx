@@ -361,26 +361,28 @@ export default function ProductDetailCard() {
           .product-button {
             width: 100% !important;
             max-width: 100% !important;
-            padding: 10px 20px !important;
-            background: #f59e0b !important;
-            color: white !important;
+            padding: 14px 24px !important;
+            background: linear-gradient(to right, #F59E0B, #FBBF24) !important;
+            color: #000 !important;
             border: none !important;
-            border-radius: 4px !important;
-            font-size: 14px !important;
-            font-weight: 600 !important;
+            border-radius: 9999px !important;
+            font-size: 1rem !important;
+            font-weight: 500 !important;
             cursor: pointer !important;
-            box-shadow: none !important;
-            transition: background 0.2s ease !important;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2) !important;
+            transition: all 0.3s !important;
             text-transform: none !important;
             letter-spacing: 0 !important;
             margin-bottom: 12px !important;
           }
           .product-button:hover {
-            background: #d97706 !important;
+            box-shadow: 0 12px 20px rgba(0,0,0,0.3) !important;
+            transform: translateY(-2px) !important;
           }
           .product-button:disabled {
-            opacity: 0.7 !important;
+            opacity: 0.6 !important;
             cursor: not-allowed !important;
+            background: linear-gradient(to right, #d1d5db, #9ca3af) !important;
           }
           .product-additional-sections {
             padding: 0 16px !important;
@@ -495,31 +497,31 @@ export default function ProductDetailCard() {
           .product-button {
             width: 100%;
             max-width: 320px;
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
+            padding: 16px 32px;
+            background: linear-gradient(to right, #F59E0B, #FBBF24);
+            color: #000;
             border: none;
-            border-radius: 6px;
-            font-size: 15px;
-            font-weight: 600;
+            border-radius: 9999px;
+            font-size: 1.125rem;
+            font-weight: 500;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
-            transition: all 0.2s ease;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
             text-transform: none;
             letter-spacing: 0;
             margin-bottom: 12px;
           }
           .product-button:hover {
-            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-            box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4);
-            transform: translateY(-1px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
           }
           .product-button:active {
             transform: translateY(0);
           }
           .product-button:disabled {
-            opacity: 0.7;
+            opacity: 0.6;
             cursor: not-allowed;
+            background: linear-gradient(to right, #d1d5db, #9ca3af);
           }
           .product-highlights-box {
             background: linear-gradient(to bottom, #f9fafb, #ffffff);
@@ -738,27 +740,28 @@ export default function ProductDetailCard() {
                 style={{
                   width: "100%",
                   maxWidth: "320px",
-                  padding: "12px 24px",
-                  background: "linear-gradient(135deg, #ffa500 0%, #ff8c00 100%)",
-                  color: "white",
+                  padding: "16px 32px",
+                  background: addingToCart 
+                    ? "linear-gradient(to right, #d1d5db, #9ca3af)" 
+                    : "linear-gradient(to right, #F59E0B, #FBBF24)",
+                  color: "#000",
                   border: "none",
-                  borderRadius: "6px",
-                  fontSize: "15px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  boxShadow: "0 2px 4px rgba(255, 165, 0, 0.3)",
-                  transition: "all 0.2s ease"
+                  borderRadius: "9999px",
+                  fontSize: "1.125rem",
+                  fontWeight: 500,
+                  cursor: addingToCart ? "not-allowed" : "pointer",
+                  boxShadow: "0 10px 15px rgba(0,0,0,0.2)",
+                  transition: "all 0.3s",
+                  opacity: addingToCart ? 0.6 : 1
                 }}
                 onMouseEnter={(e) => {
                   if (!addingToCart) {
-                    e.currentTarget.style.background = "linear-gradient(135deg, #ff8c00 0%, #ff7700 100%)";
-                    e.currentTarget.style.boxShadow = "0 4px 8px rgba(255, 165, 0, 0.4)";
-                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 12px 20px rgba(0,0,0,0.3)";
+                    e.currentTarget.style.transform = "translateY(-2px)";
                   }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "linear-gradient(135deg, #ffa500 0%, #ff8c00 100%)";
-                  e.currentTarget.style.boxShadow = "0 2px 4px rgba(255, 165, 0, 0.3)";
+                  e.currentTarget.style.boxShadow = "0 10px 15px rgba(0,0,0,0.2)";
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
@@ -957,15 +960,24 @@ export default function ProductDetailCard() {
                   <button
                     onClick={() => setShowReviewForm(true)}
                     style={{
-                      padding: "10px 20px",
-                      background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                      color: "white",
+                      padding: "14px 28px",
+                      background: "linear-gradient(to right, #F59E0B, #FBBF24)",
+                      color: "#000",
                       border: "none",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      fontWeight: "500",
+                      borderRadius: "9999px",
+                      fontSize: "1rem",
+                      fontWeight: 500,
                       cursor: "pointer",
-                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                      boxShadow: "0 10px 15px rgba(0,0,0,0.2)",
+                      transition: "all 0.3s"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.boxShadow = "0 12px 20px rgba(0,0,0,0.3)";
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = "0 10px 15px rgba(0,0,0,0.2)";
+                      e.currentTarget.style.transform = "translateY(0)";
                     }}
                   >
                     Write a Review
@@ -1029,14 +1041,29 @@ export default function ProductDetailCard() {
                         onClick={handleSubmitReview}
                         disabled={submittingReview}
                         style={{
-                          padding: "10px 20px",
-                          background: submittingReview ? "#9ca3af" : "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                          color: "white",
+                          padding: "14px 28px",
+                          background: submittingReview 
+                            ? "linear-gradient(to right, #d1d5db, #9ca3af)" 
+                            : "linear-gradient(to right, #F59E0B, #FBBF24)",
+                          color: "#000",
                           border: "none",
-                          borderRadius: "6px",
-                          fontSize: "14px",
-                          fontWeight: "500",
-                          cursor: submittingReview ? "not-allowed" : "pointer"
+                          borderRadius: "9999px",
+                          fontSize: "1rem",
+                          fontWeight: 500,
+                          cursor: submittingReview ? "not-allowed" : "pointer",
+                          boxShadow: "0 10px 15px rgba(0,0,0,0.2)",
+                          transition: "all 0.3s",
+                          opacity: submittingReview ? 0.6 : 1
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!submittingReview) {
+                            e.currentTarget.style.boxShadow = "0 12px 20px rgba(0,0,0,0.3)";
+                            e.currentTarget.style.transform = "translateY(-2px)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.boxShadow = "0 10px 15px rgba(0,0,0,0.2)";
+                          e.currentTarget.style.transform = "translateY(0)";
                         }}
                       >
                         {submittingReview ? "Submitting..." : "Submit Review"}
@@ -1152,14 +1179,24 @@ export default function ProductDetailCard() {
                   <button
                     onClick={() => navigate("/login")}
                     style={{
-                      padding: "8px 16px",
-                      background: "#f59e0b",
-                      color: "white",
+                      padding: "14px 28px",
+                      background: "linear-gradient(to right, #F59E0B, #FBBF24)",
+                      color: "#000",
                       border: "none",
-                      borderRadius: "4px",
-                      fontSize: "13px",
-                      fontWeight: "500",
-                      cursor: "pointer"
+                      borderRadius: "9999px",
+                      fontSize: "1rem",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      boxShadow: "0 10px 15px rgba(0,0,0,0.2)",
+                      transition: "all 0.3s"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.boxShadow = "0 12px 20px rgba(0,0,0,0.3)";
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = "0 10px 15px rgba(0,0,0,0.2)";
+                      e.currentTarget.style.transform = "translateY(0)";
                     }}
                   >
                     Login to Review

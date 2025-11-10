@@ -29,6 +29,14 @@ export const AdminProducts: React.FC = () => {
     images: [] as File[],
   });
 
+  // Available subcategories in the database
+  const allSubcategories = [
+    "2piece-kurti",
+    "3piece-kurti",
+    "short-kurti",
+    "long-kurti"
+  ];
+
   const refresh = async () => {
     setLoading(true);
     try {
@@ -153,13 +161,19 @@ export const AdminProducts: React.FC = () => {
             value={form.ratingCount} 
             onChange={(e) => setForm({ ...form, ratingCount: e.target.value })} 
           />
-          <input 
-            className="border-2 border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-3 rounded-lg transition-all" 
-            placeholder="Subcategory" 
+          <select 
+            className="border-2 border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 p-3 rounded-lg transition-all bg-white" 
             value={form.subcategory} 
             onChange={(e) => setForm({ ...form, subcategory: e.target.value })} 
-            required 
-          />
+            required
+          >
+            <option value="">Select Subcategory</option>
+            {allSubcategories.map((subcat) => (
+              <option key={subcat} value={subcat}>
+                {subcat.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
+              </option>
+            ))}
+          </select>
           <div className="flex items-center">
             <label className="block w-full border-2 border-gray-300 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200 rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-all">
               <span className="text-gray-600 text-sm font-medium">Choose Images</span>

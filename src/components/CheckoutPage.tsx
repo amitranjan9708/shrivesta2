@@ -105,16 +105,41 @@ function PaymentButton({
         type="button"
         onClick={handlePayment}
         disabled={processing || !shippingAddress || pincode.length !== 6}
-        className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white py-4 rounded-lg font-bold text-lg shadow-lg"
+        className="w-full flex items-center justify-center gap-2"
+        style={{
+          background: processing || !shippingAddress || pincode.length !== 6 
+            ? 'linear-gradient(to right, #d1d5db, #9ca3af)' 
+            : 'linear-gradient(to right, #F59E0B, #FBBF24)',
+          color: '#000',
+          padding: '16px 32px',
+          borderRadius: '9999px',
+          fontSize: '1.125rem',
+          fontWeight: 500,
+          cursor: processing || !shippingAddress || pincode.length !== 6 ? 'not-allowed' : 'pointer',
+          transition: 'all 0.3s',
+          boxShadow: '0 10px 15px rgba(0,0,0,0.2)',
+          border: 'none',
+          opacity: processing || !shippingAddress || pincode.length !== 6 ? 0.6 : 1
+        }}
+        onMouseEnter={(e) => {
+          if (!processing && shippingAddress && pincode.length === 6) {
+            e.currentTarget.style.boxShadow = '0 12px 20px rgba(0,0,0,0.3)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
       >
         {processing ? (
           <>
-            <Loader className="h-5 w-5 mr-2 animate-spin" />
+            <Loader className="h-5 w-5 animate-spin" />
             Redirecting to Payment...
           </>
         ) : (
           <>
-            <ExternalLink className="h-5 w-5 mr-2" />
+            <ExternalLink className="h-5 w-5" />
             Pay ₹{amount.toFixed(2)} - Continue to Payment
           </>
         )}

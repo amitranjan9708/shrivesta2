@@ -351,22 +351,24 @@ const CancelButton = styled.button`
 
 const SaveButton = styled.button`
   flex: 1;
-  background: linear-gradient(to right, #f59e0b, #facc15);
-  color: white;
+  background: linear-gradient(to right, #F59E0B, #FBBF24);
+  color: #000;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
+  padding: 16px 32px;
+  border-radius: 9999px;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 1.125rem;
+  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: opacity 0.2s;
+  transition: all 0.3s;
+  box-shadow: 0 10px 15px rgba(0,0,0,0.2);
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
+    box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+    transform: translateY(-2px);
   }
 
   &:disabled {

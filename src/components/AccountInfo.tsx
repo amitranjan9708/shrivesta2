@@ -309,20 +309,24 @@ const SectionTitle = styled.h3`
 
 const SectionButton = styled.button`
   margin-top: 8px;
-  background: linear-gradient(to right, #f59e0b, #facc15);
-  color: white;
+  background: linear-gradient(to right, #F59E0B, #FBBF24);
+  color: #000;
   border: none;
-  padding: 6px 10px;
-  border-radius: 8px;
+  padding: 12px 24px;
+  border-radius: 9999px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  box-shadow: 0 10px 15px rgba(0,0,0,0.2);
 
   &:hover {
-    opacity: 0.9;
+    box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+    transform: translateY(-2px);
   }
 
   @media(min-width: 768px) {
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 14px 28px;
+    font-size: 1rem;
   }
 `;
