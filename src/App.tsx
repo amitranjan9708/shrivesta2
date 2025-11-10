@@ -25,10 +25,16 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { AdminProducts } from "./components/admin/AdminProducts";
 import { RequireAdmin } from "./components/admin/RequireAdmin";
+import { SEO } from "./components/SEO";
 
 function HomePage() {
   return (
     <>
+      <SEO
+        title="Shrivesta - Premium Fashion & Clothing E-commerce Store"
+        description="Shop the latest fashion trends at Shrivesta. Discover premium clothing, accessories, and style collections for every occasion. Free shipping on orders over ₹500."
+        keywords="fashion, clothing, e-commerce, online shopping, apparel, style, trendy clothes, fashion store"
+      />
       <HeroCarousel />
       <Collections />
       <Occasions />

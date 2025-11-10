@@ -1,0 +1,24 @@
+# robots.txt for Shrivesta E-commerce Website
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /account/
+Disallow: /checkout
+Disallow: /order-confirmation
+Disallow: /cart
+Disallow: /login
+Disallow: /signup
+
+# Allow important pages
+Allow: /products
+Allow: /collections
+Allow: /occasions
+Allow: /about
+
+# Sitemap location
+Sitemap: https://shrivesta.in/sitemap.xml
+
+# Crawl-delay (optional, helps prevent server overload)
+Crawl-delay: 1
+
