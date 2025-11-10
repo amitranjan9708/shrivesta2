@@ -12,6 +12,7 @@ interface User {
   name: string;
   email: string;
   role?: string;
+  isVerified?: boolean;
 }
 
 interface AuthContextType {
@@ -26,7 +27,7 @@ interface AuthContextType {
     name: string,
     email: string,
     password: string
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; message?: string }>;
   logout: () => void;
   updateProfile: (
     userData: Partial<User>
@@ -136,13 +137,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (name: string, email: string, password: string) => {
     try {
       const response = await apiService.register({ name, email, password });
-      if (response.success && response.data?.user && response.data?.token) {
-        // Convert id to string for consistency and set user after registration
-        setUser({
-          ...response.data.user,
-          id: response.data.user.id.toString(),
-        });
-        return { success: true };
+      if (response.success) {
+        const message =
+          (response.data as any)?.message ||
+          "Registration successful. Please verify your email.";
+        return { success: true, message };
       } else {
         return {
           success: false,

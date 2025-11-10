@@ -25,6 +25,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { AdminProducts } from "./components/admin/AdminProducts";
 import { RequireAdmin } from "./components/admin/RequireAdmin";
+import { VerifyEmailPage } from "./components/VerifyEmailPage";
+import { ResetPasswordPage } from "./components/ResetPasswordPage";
 import { SEO } from "./components/SEO";
 
 function HomePage() {
@@ -78,6 +80,8 @@ export default function App() {
             <Route path="/products/:id" element={<ProductDetailCard />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/account" element={<AccountDashboard />} />
             <Route path="/account/orders" element={<OrdersPage />} />
             <Route path="/account/address" element={<ShippingAddressPage />} />

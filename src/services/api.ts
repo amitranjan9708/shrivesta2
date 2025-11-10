@@ -165,17 +165,12 @@ class ApiService {
   async register(userData: { name: string; email: string; password: string }) {
     const response = await this.request<{
       message: string;
-      user: { id: number; name: string; email: string; role: string };
-      token: string;
+      user: { id: number; name: string; email: string; role: string; isVerified: boolean };
+      verificationEmailSent: boolean;
     }>("/auth/register", {
       method: "POST",
       body: JSON.stringify(userData),
     });
-
-    // Store token if registration successful
-    if (response.success && response.data?.token) {
-      localStorage.setItem("authToken", response.data.token);
-    }
 
     return response;
   }
@@ -183,7 +178,7 @@ class ApiService {
   async login(credentials: { email: string; password: string }) {
     const response = await this.request<{ 
       message: string;
-      user: { id: number; name: string; email: string; role: string };
+      user: { id: number; name: string; email: string; role: string; isVerified: boolean };
       token: string;
     }>("/auth/login", {
       method: "POST",
@@ -198,8 +193,36 @@ class ApiService {
     return response;
   }
 
+  async verifyEmail(token: string) {
+    const params = new URLSearchParams({ token });
+    return this.request<{ message: string }>(`/auth/verify-email?${params.toString()}`, {
+      method: "GET",
+    });
+  }
+
+  async resendVerificationEmail(email: string) {
+    return this.request<{ message: string }>("/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async forgotPassword(email: string) {
+    return this.request<{ message: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async resetPassword(token: string, password: string) {
+    return this.request<{ message: string }>("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
+    });
+  }
+
   async getProfile() {
-    return this.request<{ user: { id: number; name: string; email: string; shippingAddress?: string; createdAt: string } }>("/auth/profile");
+    return this.request<{ user: { id: number; name: string; email: string; shippingAddress?: string; createdAt: string; isVerified?: boolean } }>("/auth/profile");
   }
 
   async getShippingAddress() {

@@ -1,9 +1,10 @@
 // Login.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Mail, Lock, ArrowLeft } from "lucide-react";
 import styled from "styled-components";
 import { useAuth } from "../contexts/AuthContext";
+import { apiService } from "../services/api";
 
 export function Login() {
   const navigate = useNavigate();
@@ -15,17 +16,33 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [forgotPassword, setForgotPassword] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
+  const [forgotStatus, setForgotStatus] = useState("");
+  const [isForgotSubmitting, setIsForgotSubmitting] = useState(false);
+  const [resendStatus, setResendStatus] = useState("");
+  const [isResendLoading, setIsResendLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("verified") === "true") {
+      setInfoMessage("Email verified successfully. You can now log in.");
+    } else if (searchParams.get("reset") === "success") {
+      setInfoMessage("Password reset successful. Please log in with your new password.");
+    } else {
+      const messageParam = searchParams.get("message");
+      if (messageParam) {
+        setInfoMessage(messageParam);
+      }
+    }
+  }, [searchParams]);
 
   // Handlers
   const handleLoginSubmit = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setInfoMessage("");
 
     try {
       console.log("Attempting login for:", email);
@@ -41,29 +58,76 @@ export function Login() {
         }
       } else {
         setError(result.error || "Login failed. Please check your credentials.");
+        if (result.error?.toLowerCase().includes("verify")) {
+          setResendStatus("");
+        }
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      setError(error?.message || "Failed to connect to server. Please check if the backend is running.");
+      setError(
+        error?.message ||
+          "Failed to connect to server. Please check if the backend is running."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSendOtp = () => {
-    // Simulate sending OTP
-    setOtpSent(true);
-    alert(`OTP sent to ${email}`);
+  const handleResendVerification = async () => {
+    if (!email) {
+      setResendStatus("Enter your email above to resend the verification link.");
+      return;
+    }
+    setIsResendLoading(true);
+    setResendStatus("");
+    try {
+      const response = await apiService.resendVerificationEmail(email);
+      if (response.success) {
+        setResendStatus(
+          (response.data as any)?.message ||
+            "Verification email sent again. Please check your inbox."
+        );
+      } else {
+        setResendStatus(response.error || "Unable to resend verification email.");
+      }
+    } catch (err) {
+      setResendStatus(
+        "Unable to resend verification email right now. Please try again later."
+      );
+    } finally {
+      setIsResendLoading(false);
+    }
   };
 
-  const handleResetPassword = () => {
-    // Simulate resetting password
-    alert(`Password for ${email} reset successfully!`);
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsForgotSubmitting(true);
+    setForgotStatus("");
+    setError("");
+    try {
+      const response = await apiService.forgotPassword(email);
+      if (response.success) {
+        setForgotStatus(
+          (response.data as any)?.message ||
+            "If that email is registered, a password reset link has been sent."
+        );
+      } else {
+        setForgotStatus(
+          response.error || "Unable to send password reset link right now."
+        );
+      }
+    } catch (err) {
+      setForgotStatus(
+        "Unable to send password reset link right now. Please try again later."
+      );
+    } finally {
+      setIsForgotSubmitting(false);
+    }
+  };
+
+  const handleBackToLogin = () => {
     setForgotPassword(false);
-    setOtpSent(false);
-    setEmail("");
-    setOtp("");
-    setNewPassword("");
+    setForgotStatus("");
   };
 
   return (
@@ -91,17 +155,27 @@ export function Login() {
           {!forgotPassword && (
             <Subtitle>Sign in to continue to ShriVesta</Subtitle>
           )}
-          {forgotPassword && !otpSent && (
-            <Subtitle>Enter your registered email to receive OTP</Subtitle>
-          )}
-          {forgotPassword && otpSent && (
-            <Subtitle>Enter OTP and new password</Subtitle>
+          {forgotPassword && (
+            <Subtitle>Enter your registered email to receive a password reset link</Subtitle>
           )}
 
           {/* Login Form */}
           {!forgotPassword && (
             <Form onSubmit={handleLoginSubmit}>
               {error && <ErrorMessage>{error}</ErrorMessage>}
+              {error && error.toLowerCase().includes("verify") && (
+                <ResendContainer>
+                  <ResendButton
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={isResendLoading}
+                  >
+                    {isResendLoading ? "Resending..." : "Resend verification email"}
+                  </ResendButton>
+                  {resendStatus && <ResendFeedback>{resendStatus}</ResendFeedback>}
+                </ResendContainer>
+              )}
+              {infoMessage && <InfoMessage>{infoMessage}</InfoMessage>}
 
               <InputGroup>
                 <label>Email</label>
@@ -156,8 +230,9 @@ export function Login() {
           )}
 
           {/* Forgot Password - Step 1: Enter Email */}
-          {forgotPassword && !otpSent && (
-            <Form>
+          {forgotPassword && (
+            <Form onSubmit={handleForgotPasswordSubmit}>
+              {forgotStatus && <InfoMessage>{forgotStatus}</InfoMessage>}
               <InputGroup>
                 <label>Email</label>
                 <InputWrapper>
@@ -168,54 +243,14 @@ export function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     required
+                    disabled={isForgotSubmitting}
                   />
                 </InputWrapper>
               </InputGroup>
-              <SubmitButton type="button" onClick={handleSendOtp}>
-                Send OTP
+              <SubmitButton type="submit" disabled={isForgotSubmitting}>
+                {isForgotSubmitting ? "Sending..." : "Send reset link"}
               </SubmitButton>
-              <BackToLogin onClick={() => setForgotPassword(false)}>
-                Back to Login
-              </BackToLogin>
-            </Form>
-          )}
-
-          {/* Forgot Password - Step 2: Enter OTP and New Password */}
-          {forgotPassword && otpSent && (
-            <Form>
-              <InputGroup>
-                <label>OTP</label>
-                <InputWrapper>
-                  <input
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="Enter OTP"
-                    required
-                  />
-                </InputWrapper>
-              </InputGroup>
-
-              <InputGroup>
-                <label>New Password</label>
-                <InputWrapper>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                  />
-                  <ShowHideButton onClick={() => setShowPassword((v) => !v)}>
-                    {showPassword ? "Hide" : "Show"}
-                  </ShowHideButton>
-                </InputWrapper>
-              </InputGroup>
-
-              <SubmitButton type="button" onClick={handleResetPassword}>
-                Reset Password
-              </SubmitButton>
-              <BackToLogin onClick={() => setForgotPassword(false)}>
+              <BackToLogin onClick={handleBackToLogin}>
                 Back to Login
               </BackToLogin>
             </Form>
@@ -399,27 +434,13 @@ const BackToLogin = styled.span`
 
 const SubmitButton = styled.button`
   width: 100%;
-  padding: 16px 32px;
-  background: linear-gradient(to right, #F59E0B, #FBBF24);
+  padding: 10px;
+  background: linear-gradient(to right, #f59e0b, #facc15);
   border: none;
-  color: #000;
-  border-radius: 9999px;
-  font-size: 1.125rem;
-  font-weight: 500;
+  color: white;
+  border-radius: 10px;
+  font-size: 16px;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 10px 15px rgba(0,0,0,0.2);
-  
-  &:hover:not(:disabled) {
-    box-shadow: 0 12px 20px rgba(0,0,0,0.3);
-    transform: translateY(-2px);
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background: linear-gradient(to right, #d1d5db, #9ca3af);
-  }
 `;
 
 const SignupText = styled.p`
@@ -444,4 +465,40 @@ const ErrorMessage = styled.div`
   font-size: 14px;
   text-align: center;
   border: 1px solid #fecaca;
+`;
+
+const InfoMessage = styled.div`
+  background: #fef3c7;
+  color: #92400e;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid #fcd34d;
+`;
+
+const ResendContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+`;
+
+const ResendButton = styled.button`
+  background: none;
+  border: 1px solid #f59e0b;
+  color: #f59e0b;
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const ResendFeedback = styled.span`
+  font-size: 12px;
+  color: #6b7280;
 `;

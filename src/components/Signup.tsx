@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, User, ArrowLeft } from "lucide-react";
 import styled from "styled-components";
 import { useAuth } from "../contexts/AuthContext";
+import { apiService } from "../services/api";
 
 export function Signup() {
   const navigate = useNavigate();
@@ -13,16 +14,23 @@ export function Signup() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isResendLoading, setIsResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setSuccessMessage("");
+    setResendMessage("");
 
     try {
       const result = await register(name, email, password);
       if (result.success) {
-        navigate("/");
+        setSuccessMessage(
+          result.message || "Please verify your email to complete registration."
+        );
       } else {
         setError(result.error || "Registration failed");
       }
@@ -30,6 +38,32 @@ export function Signup() {
       setError("An unexpected error occurred");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (!email) {
+      setResendMessage("Enter your email above to resend the verification link.");
+      return;
+    }
+    setIsResendLoading(true);
+    setResendMessage("");
+    try {
+      const response = await apiService.resendVerificationEmail(email);
+      if (response.success) {
+        setResendMessage(
+          (response.data as any)?.message ||
+            "Verification email sent again. Please check your inbox."
+        );
+      } else {
+        setResendMessage(response.error || "Unable to resend verification email.");
+      }
+    } catch (err) {
+      setResendMessage(
+        "Unable to resend verification email right now. Please try again later."
+      );
+    } finally {
+      setIsResendLoading(false);
     }
   };
 
@@ -61,6 +95,7 @@ export function Signup() {
 
           <Form onSubmit={handleSubmit}>
             {error && <ErrorMessage>{error}</ErrorMessage>}
+            {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
 
             <InputGroup>
               <label>Full Name</label>
@@ -111,6 +146,20 @@ export function Signup() {
               {isLoading ? "Creating Account..." : "Create Account"}
             </SubmitButton>
           </Form>
+
+          {successMessage && (
+            <ResendContainer>
+              <p>Didn&apos;t get the email?</p>
+              <ResendButton
+                type="button"
+                onClick={handleResendEmail}
+                disabled={isResendLoading}
+              >
+                {isResendLoading ? "Resending..." : "Resend verification email"}
+              </ResendButton>
+              {resendMessage && <ResendFeedback>{resendMessage}</ResendFeedback>}
+            </ResendContainer>
+          )}
 
           <SignupText>
             Already have an account?{" "}
@@ -252,27 +301,13 @@ const UserIcon = styled(User)`
 
 const SubmitButton = styled.button`
   width: 100%;
-  padding: 16px 32px;
-  background: linear-gradient(to right, #F59E0B, #FBBF24);
+  padding: 10px;
+  background: linear-gradient(to right, #f59e0b, #facc15);
   border: none;
-  color: #000;
-  border-radius: 9999px;
-  font-size: 1.125rem;
-  font-weight: 500;
+  color: white;
+  border-radius: 10px;
+  font-size: 16px;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 10px 15px rgba(0,0,0,0.2);
-  
-  &:hover:not(:disabled) {
-    box-shadow: 0 12px 20px rgba(0,0,0,0.3);
-    transform: translateY(-2px);
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background: linear-gradient(to right, #d1d5db, #9ca3af);
-  }
 `;
 
 const SignupText = styled.p`
@@ -297,4 +332,41 @@ const ErrorMessage = styled.div`
   font-size: 14px;
   text-align: center;
   border: 1px solid #fecaca;
+`;
+
+const SuccessMessage = styled.div`
+  background: #ecfdf3;
+  color: #047857;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid #bbf7d0;
+`;
+
+const ResendContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  font-size: 14px;
+`;
+
+const ResendButton = styled.button`
+  background: none;
+  border: 1px solid #f59e0b;
+  color: #f59e0b;
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const ResendFeedback = styled.span`
+  font-size: 12px;
+  color: #6b7280;
 `;
