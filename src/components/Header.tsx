@@ -72,6 +72,24 @@ export function Header() {
     };
   }, [showMobileMenu]);
 
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showUserMenu && !target.closest('.user-menu-container')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
+
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -151,7 +169,7 @@ export function Header() {
 
             {/* User Menu */}
             {isAuthenticated ? (
-              <div className="relative">
+              <div className="relative user-menu-container">
                 <Button
                   variant="ghost"
                   size="icon"
