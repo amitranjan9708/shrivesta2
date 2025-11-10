@@ -142,6 +142,25 @@ const cartMobileStyles = `
       color: #000000 !important;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     }
+    .quantity-dropdown {
+      -webkit-overflow-scrolling: touch !important;
+      scrollbar-width: thin !important;
+      scrollbar-color: #d1d5db #f3f4f6 !important;
+    }
+    .quantity-dropdown::-webkit-scrollbar {
+      width: 6px !important;
+    }
+    .quantity-dropdown::-webkit-scrollbar-track {
+      background: #f3f4f6 !important;
+      border-radius: 4px !important;
+    }
+    .quantity-dropdown::-webkit-scrollbar-thumb {
+      background: #d1d5db !important;
+      border-radius: 4px !important;
+    }
+    .quantity-dropdown::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af !important;
+    }
   }
 `;
 
@@ -725,7 +744,10 @@ export function CartPage() {
                               borderRadius: '4px',
                               boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
                               zIndex: 10,
-                              display: 'none'
+                              display: 'none',
+                              maxHeight: '200px',
+                              overflowY: 'auto',
+                              overflowX: 'hidden'
                             }}
                             className={`quantity-dropdown quantity-dropdown-${item.productId}`}
                             >
