@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, RefreshCw, ArrowRight } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, RefreshCw, ArrowRight, Check, Share2, Heart, Clock, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { apiService } from "../services/api";
@@ -22,24 +22,125 @@ const cartMobileStyles = `
   
   /* Mobile overrides */
   @media (max-width: 767px) {
+    .cart-page-wrapper {
+      padding-top: 0 !important;
+      background: #f5f5f5 !important;
+    }
     .cart-container-mobile {
       padding-left: 0 !important;
       padding-right: 0 !important;
+      padding-top: 0 !important;
       max-width: 100% !important;
+      background: #f5f5f5 !important;
+    }
+    .cart-items-container {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 8px !important;
+      padding: 0 !important;
+      background: #f5f5f5 !important;
     }
     .cart-item-mobile {
       width: 100% !important;
       padding: 0 !important;
       margin: 0 !important;
       display: block !important;
+      background: white !important;
+      border-radius: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
     }
     .cart-item-content-mobile {
       display: block !important;
       width: 100% !important;
-      padding: 16px !important;
+      padding: 14px 16px !important;
+      background: white !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     }
     .cart-item-desktop {
       display: none !important;
+    }
+    .cart-item-image {
+      width: 100% !important;
+      height: auto !important;
+      aspect-ratio: 3/4 !important;
+      object-fit: cover !important;
+      border-radius: 0 !important;
+      margin-bottom: 12px !important;
+    }
+    .cart-item-title {
+      font-size: 14px !important;
+      font-weight: 400 !important;
+      color: #000000 !important;
+      line-height: 1.5 !important;
+      margin-bottom: 8px !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .cart-item-price {
+      font-size: 18px !important;
+      font-weight: 500 !important;
+      color: #000000 !important;
+      margin-bottom: 12px !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .cart-item-old-price {
+      font-size: 14px !important;
+      color: #666666 !important;
+      text-decoration: line-through !important;
+      font-weight: 400 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .cart-order-summary {
+      background: white !important;
+      border-radius: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 14px 16px !important;
+      margin-top: 8px !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .cart-order-summary h2 {
+      font-size: 14px !important;
+      font-weight: 500 !important;
+      color: #000000 !important;
+      letter-spacing: 0.3px !important;
+      margin-bottom: 16px !important;
+      padding-bottom: 12px !important;
+      border-bottom: 1px solid #e5e7eb !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .cart-order-summary div {
+      font-size: 12px !important;
+      color: #1a1a1a !important;
+      font-weight: 400 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .cart-order-summary span {
+      font-size: 12px !important;
+      color: #1a1a1a !important;
+      font-weight: 400 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .cart-order-summary .total-text {
+      font-size: 13px !important;
+      font-weight: 500 !important;
+      color: #000000 !important;
+    }
+    .cart-order-summary .total-amount {
+      font-size: 18px !important;
+      font-weight: 500 !important;
+      color: #000000 !important;
+    }
+    .cart-header-mobile {
+      background: #f5f5f5 !important;
+      padding-top: 16px !important;
+      padding-bottom: 16px !important;
+    }
+    .cart-header-mobile h1 {
+      font-size: 18px !important;
+      font-weight: 500 !important;
+      color: #000000 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     }
   }
 `;
@@ -71,6 +172,7 @@ export function CartPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
+  const [pincode, setPincode] = useState("");
 
   // Redirect to login if not authenticated (after auth check completes)
   useEffect(() => {
@@ -338,12 +440,12 @@ export function CartPage() {
   return (
     <>
       <style>{cartMobileStyles}</style>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-amber-50 py-8 pb-24 lg:pb-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-amber-50 pb-24 pt-0 lg:pb-8 lg:pt-8 md:bg-gradient-to-br md:from-gray-50 md:to-amber-50 md:py-8 cart-page-wrapper">
         <div className="max-w-7xl mx-auto cart-container-mobile">
-        {/* Header with padding on mobile */}
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Shopping Cart</h1>
+        {/* Header with padding on mobile - Hidden on mobile, shown on desktop */}
+        <div className="hidden md:block px-4 sm:px-6 lg:px-8 md:px-6 cart-header-mobile md:bg-transparent md:py-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 md:mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 md:text-3xl md:font-bold md:text-gray-900">Shopping Cart</h1>
               <div className="flex items-center gap-4">
             <button
               onClick={refreshCart}
@@ -365,11 +467,74 @@ export function CartPage() {
           </div>
         </div>
 
-        <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+        <div className="px-0 sm:px-6 lg:px-8 md:px-6">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start md:flex-row md:gap-8">
           {/* Cart Items - Left Side */}
-          <div className="w-full lg:w-auto lg:flex-1 min-w-0">
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          <div className="w-full lg:w-auto lg:flex-1 min-w-0 md:w-auto md:flex-1">
+            {/* Myntra-style Mobile Header */}
+            <div className="md:hidden mb-2">
+              <div className="bg-white px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Link to="/" className="text-black">
+                    <ArrowLeft className="h-5 w-5" />
+                  </Link>
+                  <span style={{ fontSize: '14px', fontWeight: '500', color: '#000', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>SHOPPING BAG</span>
+                </div>
+                <span style={{ fontSize: '12px', fontWeight: '400', color: '#666', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>STEP 1/3</span>
+              </div>
+            </div>
+
+            {/* Check Delivery Section - Mobile Only */}
+            {cartItems.length > 0 && (
+              <div className="md:hidden mb-2">
+                <div className="bg-white px-4 py-3">
+                  <h3 style={{ fontSize: '13px', fontWeight: '500', color: '#000', marginBottom: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                    Check delivery time & services
+                  </h3>
+                  <input
+                    type="text"
+                    placeholder="ENTER PIN CODE"
+                    maxLength={6}
+                    value={pincode}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      setPincode(value);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Items Selected Summary - Mobile Only */}
+            {cartItems.length > 0 && (
+              <div className="md:hidden mb-2">
+                <div className="bg-white px-4 py-3 flex items-center justify-between">
+                  <div>
+                    <span style={{ fontSize: '12px', fontWeight: '400', color: '#666', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                      {cartItems.length}/{cartItems.length} ITEMS SELECTED
+                    </span>
+                    <div style={{ fontSize: '16px', fontWeight: '500', color: '#000', marginTop: '4px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                      ₹{calculateSubtotal().toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Share2 className="h-5 w-5 text-gray-600" />
+                    <Trash2 className="h-5 w-5 text-gray-600" />
+                    <Heart className="h-5 w-5 text-gray-600" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-xl shadow-md overflow-hidden md:bg-white md:rounded-xl md:shadow-md">
               {cartItems.length === 0 ? (
                   <div className="p-12 text-center">
                   <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -403,7 +568,7 @@ export function CartPage() {
                   </Link>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-200">
+                <div className="divide-y divide-gray-200 cart-items-container md:divide-y md:divide-gray-200">
                   {cartItems.map((item, index) => (
                     <div
                       key={`${item.id}-${item.productId}-${index}`}
@@ -411,204 +576,247 @@ export function CartPage() {
                       {/* Mobile Layout - Vertical Stack - Everything below image */}
                       <div className="cart-item-mobile">
                       <div className="cart-item-content-mobile">
-                        {/* Image - Full width on mobile, at the top */}
-                        <div style={{ width: '100%', marginBottom: '20px', display: 'block' }}>
+                        {/* Image - Full width on mobile, at the top with checkmark overlay */}
+                        <div style={{ width: '100%', marginBottom: '12px', display: 'block', position: 'relative' }}>
                           <img
                             src={item.image || '/placeholder.png'}
                             alt={item.name}
-                            style={{
-                              width: '100%',
-                              height: '280px',
-                              objectFit: 'cover',
-                              borderRadius: '8px',
-                              display: 'block'
-                            }}
-                            className="shadow-sm"
+                            className="cart-item-image"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = '/placeholder.png';
                             }}
                           />
-                        </div>
-
-                        {/* Title - Below image, full width */}
-                        <div style={{ width: '100%', marginBottom: '12px', display: 'block' }}>
-                          <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', margin: 0 }}>
-                            {item.name}
-                          </h3>
-                        </div>
-
-                        {/* Size/Color Info - Below title, full width */}
-                        {(item.size || item.color) && (
-                          <div style={{ width: '100%', marginBottom: '16px', display: 'block' }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                              {item.size && (
-                                <span style={{ 
-                                  backgroundColor: '#f3f4f6', 
-                                  padding: '6px 12px', 
-                                  borderRadius: '6px',
-                                  fontSize: '14px',
-                                  color: '#4b5563'
-                                }}>
-                                  Size: {item.size}
-                                </span>
-                              )}
-                              {item.color && (
-                                <span style={{ 
-                                  backgroundColor: '#f3f4f6', 
-                                  padding: '6px 12px', 
-                                  borderRadius: '6px',
-                                  fontSize: '14px',
-                                  color: '#4b5563'
-                                }}>
-                                  Color: {item.color}
-                                </span>
-                              )}
-                            </div>
+                          <div style={{
+                            position: 'absolute',
+                            top: '8px',
+                            left: '8px',
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            background: '#ff3f6c',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '2px solid white'
+                          }}>
+                            <Check className="h-3 w-3 text-white" />
                           </div>
-                        )}
-
-                        {/* Price - Below size/color, full width */}
-                        <div style={{ width: '100%', marginBottom: '20px', display: 'block' }}>
-                          <div style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>
-                            ₹{(item.price * item.quantity).toLocaleString()}
-                          </div>
-                          {item.originalPrice &&
-                            item.originalPrice > item.price && (
-                              <div style={{ fontSize: '14px', color: '#6b7280', textDecoration: 'line-through', marginTop: '4px' }}>
-                                ₹{(item.originalPrice * item.quantity).toLocaleString()}
-                              </div>
-                            )}
-                        </div>
-
-                        {/* Quantity Controls - Below price, full width, centered */}
-                        <div style={{ width: '100%', marginBottom: '20px', display: 'block' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <button
-                              onClick={() =>
-                                updateQuantity(item.productId, item.quantity - 1)
-                              }
-                              disabled={updating === item.productId}
-                              style={{
-                                width: '48px',
-                                height: '48px',
-                                borderRadius: '50%',
-                                border: 'none',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: updating === item.productId 
-                                  ? 'linear-gradient(to right, #d1d5db, #9ca3af)' 
-                                  : 'linear-gradient(to right, #F59E0B, #FBBF24)',
-                                cursor: updating === item.productId ? 'not-allowed' : 'pointer',
-                                opacity: updating === item.productId ? 0.6 : 1,
-                                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                                transition: 'all 0.3s',
-                                color: '#000',
-                                fontWeight: 'bold'
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!updating) {
-                                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.3)';
-                                  e.currentTarget.style.transform = 'scale(1.05)';
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-                                e.currentTarget.style.transform = 'scale(1)';
-                              }}
-                            >
-                              <Minus className="h-5 w-5" />
-                            </button>
-
-                            <span style={{ 
-                              width: '80px', 
-                              textAlign: 'center', 
-                              fontWeight: '600', 
-                              fontSize: '20px',
-                              margin: '0 24px'
-                            }}>
-                              {item.quantity}
-                            </span>
-
-                            <button
-                              onClick={() =>
-                                updateQuantity(item.productId, item.quantity + 1)
-                              }
-                              disabled={updating === item.productId}
-                              style={{
-                                width: '48px',
-                                height: '48px',
-                                borderRadius: '50%',
-                                border: 'none',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: updating === item.productId 
-                                  ? 'linear-gradient(to right, #d1d5db, #9ca3af)' 
-                                  : 'linear-gradient(to right, #F59E0B, #FBBF24)',
-                                cursor: updating === item.productId ? 'not-allowed' : 'pointer',
-                                opacity: updating === item.productId ? 0.6 : 1,
-                                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                                transition: 'all 0.3s',
-                                color: '#000',
-                                fontWeight: 'bold'
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!updating) {
-                                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.3)';
-                                  e.currentTarget.style.transform = 'scale(1.05)';
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-                                e.currentTarget.style.transform = 'scale(1)';
-                              }}
-                            >
-                              <Plus className="h-5 w-5" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Delete Button - Below quantity, full width, centered */}
-                        <div style={{ width: '100%', display: 'block' }}>
+                          {/* Remove Button - Top Right */}
                           <button
                             onClick={() => removeItem(item.productId)}
                             disabled={updating === item.productId}
                             style={{
-                              width: '100%',
-                              padding: '14px 24px',
-                              color: '#000',
-                              background: updating === item.productId 
-                                ? 'linear-gradient(to right, #d1d5db, #9ca3af)' 
-                                : 'linear-gradient(to right, #F59E0B, #FBBF24)',
-                              border: 'none',
-                              borderRadius: '9999px',
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '50%',
+                              background: 'white',
+                              border: '1px solid #d1d5db',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              gap: '8px',
-                              fontWeight: 500,
                               cursor: updating === item.productId ? 'not-allowed' : 'pointer',
                               opacity: updating === item.productId ? 0.6 : 1,
-                              boxShadow: '0 10px 15px rgba(0,0,0,0.2)',
-                              transition: 'all 0.3s',
-                              fontSize: '1rem'
+                              transition: 'all 0.2s',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                             }}
                             onMouseEnter={(e) => {
                               if (!updating) {
-                                e.currentTarget.style.boxShadow = '0 12px 20px rgba(0,0,0,0.3)';
-                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.background = '#f3f4f6';
+                                e.currentTarget.style.transform = 'scale(1.1)';
                               }
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
-                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.background = 'white';
+                              e.currentTarget.style.transform = 'scale(1)';
                             }}
+                            title="Remove item"
                           >
-                            <Trash2 className="h-5 w-5" />
-                            <span>Remove Item</span>
+                            <X className="h-4 w-4 text-gray-700" />
                           </button>
                         </div>
+
+                        {/* Brand Name */}
+                        <div style={{ width: '100%', marginBottom: '4px', display: 'block' }}>
+                          <span style={{ fontSize: '12px', fontWeight: '400', color: '#666', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                            {item.name.split(' ').slice(0, 3).join(' ')}
+                          </span>
+                        </div>
+
+                        {/* Product Name - Below brand, full width */}
+                        <div style={{ width: '100%', marginBottom: '8px', display: 'block' }}>
+                          <h3 className="cart-item-title" style={{ fontSize: '13px', fontWeight: '400', color: '#000', lineHeight: '1.4' }}>
+                            {item.name}
+                          </h3>
+                        </div>
+
+                        {/* Sold By */}
+                        <div style={{ width: '100%', marginBottom: '12px', display: 'block' }}>
+                          <span style={{ fontSize: '11px', fontWeight: '400', color: '#666', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                            Sold by: SHRIVESTA
+                          </span>
+                        </div>
+
+                        {/* Size and Quantity Dropdowns */}
+                        <div style={{ width: '100%', marginBottom: '12px', display: 'flex', gap: '12px' }}>
+                          {item.size && (
+                            <div style={{ flex: 1 }}>
+                              <div style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'space-between',
+                                padding: '10px 12px',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                color: '#000',
+                                fontWeight: '400',
+                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                                background: 'white'
+                              }}>
+                                <span>Size: {item.size}</span>
+                                <span style={{ fontSize: '12px' }}>▼</span>
+                              </div>
+                            </div>
+                          )}
+                          <div style={{ flex: 1, position: 'relative' }}>
+                            <div style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'space-between',
+                              padding: '10px 12px',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              color: '#000',
+                              fontWeight: '400',
+                              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                              background: 'white',
+                              cursor: 'pointer'
+                            }}
+                            onClick={(e) => {
+                              // Toggle dropdown or show quantity controls
+                              const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (dropdown) {
+                                // Close all other dropdowns first
+                                document.querySelectorAll('.quantity-dropdown').forEach((d) => {
+                                  if (d !== dropdown) {
+                                    (d as HTMLElement).style.display = 'none';
+                                  }
+                                });
+                                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                              }
+                            }}
+                            >
+                              <span>Qty: {item.quantity}</span>
+                              <span style={{ fontSize: '12px' }}>▼</span>
+                            </div>
+                            {/* Quantity Dropdown Menu */}
+                            <div style={{
+                              position: 'absolute',
+                              top: '100%',
+                              left: 0,
+                              right: 0,
+                              marginTop: '4px',
+                              background: 'white',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '4px',
+                              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                              zIndex: 10,
+                              display: 'none'
+                            }}
+                            className={`quantity-dropdown quantity-dropdown-${item.productId}`}
+                            >
+                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((qty) => (
+                                <div
+                                  key={qty}
+                                  onClick={() => {
+                                    if (qty === 0) {
+                                      removeItem(item.productId);
+                                    } else {
+                                      updateQuantity(item.productId, qty);
+                                    }
+                                    const dropdown = document.querySelector(`.quantity-dropdown-${item.productId}`) as HTMLElement;
+                                    if (dropdown) dropdown.style.display = 'none';
+                                  }}
+                                  style={{
+                                    padding: '10px 12px',
+                                    fontSize: '12px',
+                                    color: '#000',
+                                    cursor: 'pointer',
+                                    borderBottom: '1px solid #f3f4f6',
+                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = '#f9fafb';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'white';
+                                  }}
+                                >
+                                  {qty}
+                                </div>
+                              ))}
+                              <div
+                                onClick={() => {
+                                  removeItem(item.productId);
+                                  const dropdown = document.querySelector(`.quantity-dropdown-${item.productId}`) as HTMLElement;
+                                  if (dropdown) dropdown.style.display = 'none';
+                                }}
+                                style={{
+                                  padding: '10px 12px',
+                                  fontSize: '12px',
+                                  color: '#dc2626',
+                                  cursor: 'pointer',
+                                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                                  fontWeight: '500'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#fef2f2';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'white';
+                                }}
+                              >
+                                Remove
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Price - Below size/color, full width */}
+                        <div style={{ width: '100%', marginBottom: '12px', display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: '16px', fontWeight: '500', color: '#000', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                            ₹{(item.price * item.quantity).toLocaleString()}
+                          </div>
+                          {item.originalPrice &&
+                            item.originalPrice > item.price && (
+                              <>
+                                <div style={{ fontSize: '13px', color: '#666', textDecoration: 'line-through', fontWeight: '400', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                                  ₹{(item.originalPrice * item.quantity).toLocaleString()}
+                                </div>
+                                <div style={{ 
+                                  fontSize: '12px', 
+                                  color: '#ff3f6c', 
+                                  fontWeight: '500',
+                                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+                                }}>
+                                  ₹{((item.originalPrice - item.price) * item.quantity).toLocaleString()} OFF
+                                </div>
+                              </>
+                            )}
+                        </div>
+
+                        {/* Return Policy */}
+                        <div style={{ width: '100%', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Clock className="h-4 w-4 text-gray-600" />
+                          <span style={{ fontSize: '11px', fontWeight: '400', color: '#666', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                            14 days return available
+                          </span>
+                        </div>
+
                       </div>
                       </div>
 
@@ -926,38 +1134,38 @@ export function CartPage() {
           </div>
 
           {/* Order Summary - Right Side */}
-          <div className="w-full lg:w-96 lg:flex-shrink-0">
-            <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-amber-100 lg:sticky lg:top-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
+          <div className="w-full lg:w-96 lg:flex-shrink-0 md:w-96 md:flex-shrink-0">
+            <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-amber-100 lg:sticky lg:top-8 cart-order-summary md:bg-white md:rounded-xl md:shadow-lg md:p-6 md:border-2 md:border-amber-100 md:sticky md:top-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200 md:text-2xl md:font-bold md:text-gray-900 md:mb-6 md:pb-4 md:border-b md:border-gray-200">
                 Order Summary
               </h2>
 
               {cartItems.length > 0 ? (
                 <>
-                  <div className="space-y-4 mb-6">
-                    <div className="flex justify-between text-gray-700">
-                      <span className="font-medium">Subtotal</span>
-                      <span className="font-semibold">₹{calculateSubtotal().toLocaleString()}</span>
+                  <div className="space-y-4 mb-6 md:space-y-4 md:mb-6">
+                    <div className="flex justify-between text-gray-700 md:flex md:justify-between md:text-gray-700">
+                      <span className="font-medium md:font-medium" style={{ fontSize: '12px', color: '#1a1a1a', fontWeight: '400', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>Subtotal</span>
+                      <span className="font-semibold md:font-semibold" style={{ fontSize: '12px', color: '#1a1a1a', fontWeight: '400', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>₹{calculateSubtotal().toLocaleString()}</span>
                     </div>
 
                     {calculateSavings() > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span className="font-medium">You Save</span>
-                        <span className="font-bold">₹{calculateSavings().toLocaleString()}</span>
+                      <div className="flex justify-between text-green-600 md:flex md:justify-between md:text-green-600">
+                        <span className="font-medium md:font-medium" style={{ fontSize: '12px', color: '#059669', fontWeight: '400', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>You Save</span>
+                        <span className="font-bold md:font-bold" style={{ fontSize: '12px', color: '#059669', fontWeight: '400', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>₹{calculateSavings().toLocaleString()}</span>
                       </div>
                     )}
 
-                    <div className="flex justify-between text-gray-700">
-                      <span className="font-medium">Shipping</span>
-                      <span className={`font-semibold ${calculateShipping() === 0 ? 'text-green-600' : ''}`}>
+                    <div className="flex justify-between text-gray-700 md:flex md:justify-between md:text-gray-700">
+                      <span className="font-medium md:font-medium" style={{ fontSize: '12px', color: '#1a1a1a', fontWeight: '400', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>Shipping</span>
+                      <span className={`font-semibold md:font-semibold ${calculateShipping() === 0 ? 'text-green-600' : ''}`} style={{ fontSize: '12px', color: calculateShipping() === 0 ? '#059669' : '#1a1a1a', fontWeight: '400', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
                         {calculateShipping() === 0 ? 'FREE' : `₹${calculateShipping()}`}
                       </span>
                     </div>
 
-                    <div className="border-t-2 border-amber-200 pt-4 mt-4">
-                      <div className="flex justify-between text-xl font-bold text-gray-900">
-                        <span>Total</span>
-                        <span className="text-amber-600">₹{calculateTotal().toLocaleString()}</span>
+                    <div className="border-t-2 border-amber-200 pt-4 mt-4 md:border-t-2 md:border-amber-200 md:pt-4 md:mt-4">
+                      <div className="flex justify-between text-xl font-bold text-gray-900 md:flex md:justify-between md:text-xl md:font-bold md:text-gray-900">
+                        <span className="total-text">Total</span>
+                        <span className="total-amount">₹{calculateTotal().toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -1041,45 +1249,7 @@ export function CartPage() {
           </div>
         </div>
 
-        {/* Mobile/Sticky Checkout Button - Always visible when items exist */}
-        {cartItems.length > 0 && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-amber-200 shadow-2xl p-4 z-50">
-            <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-              <div>
-                <p className="text-xs text-gray-600">Total</p>
-                <p className="text-xl font-bold text-amber-600">₹{calculateTotal().toLocaleString()}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  console.log("Mobile checkout button clicked");
-                  navigate("/checkout");
-                }}
-                className="flex-1"
-                style={{
-                  background: 'linear-gradient(to right, #F59E0B, #FBBF24)',
-                  color: '#000',
-                  padding: '14px 24px',
-                  borderRadius: '9999px',
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s',
-                  boxShadow: '0 10px 15px rgba(0,0,0,0.2)',
-                  border: 'none'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 12px 20px rgba(0,0,0,0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
-                }}
-              >
-                Checkout
-              </button>
-            </div>
-          </div>
-        )}
+        
         </div>
         </div>
       </div>
