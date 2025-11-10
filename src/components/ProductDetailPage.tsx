@@ -41,6 +41,7 @@ export default function ProductDetailCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedImg, setSelectedImg] = useState("");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -67,6 +68,7 @@ export default function ProductDetailCard() {
           // ✅ Always show the first image by default
           if (productData.product.imageUrls?.length > 0) {
             setSelectedImg(productData.product.imageUrls[0]);
+            setCurrentImageIndex(0);
           }
         } else {
           setError("Product not found");
@@ -272,112 +274,134 @@ export default function ProductDetailCard() {
           .product-detail-container {
             max-width: 100% !important;
             margin: 0 !important;
-            padding: 16px !important;
-            background: #FFF;
+            padding: 0 !important;
+            background: #ffffff !important;
           }
           .product-detail-content {
             flex-direction: column !important;
-            gap: 20px !important;
+            gap: 0 !important;
           }
           .product-image-section {
             width: 100% !important;
             flex-direction: column !important;
-            gap: 12px !important;
+            gap: 0 !important;
+            background: white !important;
+            padding: 0 !important;
+            position: relative !important;
           }
           .product-thumbnails {
-            display: flex !important;
-            flex-direction: row !important;
-            gap: 8px !important;
-            overflow-x: auto !important;
-            padding: 0 !important;
-            order: 2 !important;
-          }
-          .product-thumbnails img {
-            width: 50px !important;
-            height: 60px !important;
-            flex-shrink: 0 !important;
-            border-radius: 4px !important;
+            display: none !important;
           }
           .product-main-image {
             width: 100% !important;
             height: auto !important;
-            max-height: 400px !important;
+            max-height: none !important;
             object-fit: cover !important;
-            border-radius: 4px !important;
-            border: 1px solid #e5e7eb !important;
-            order: 1 !important;
+            border-radius: 0 !important;
+            border: none !important;
+            display: block !important;
+            aspect-ratio: 3/4 !important;
           }
           .product-details-section {
             padding: 0 !important;
             width: 100% !important;
+            background: #f5f5f5 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+          }
+          .product-info-card {
+            background: white !important;
+            padding: 14px 16px !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
           }
           .product-title {
-            font-size: 20px !important;
-            font-weight: 600 !important;
-            line-height: 1.3 !important;
-            margin-bottom: 8px !important;
-            color: #1f2937 !important;
+            font-size: 16px !important;
+            font-weight: 500 !important;
+            line-height: 1.4 !important;
+            margin-bottom: 6px !important;
+            color: #111827 !important;
+            letter-spacing: 0 !important;
           }
           .product-subtitle {
-            font-size: 14px !important;
+            font-size: 13px !important;
             color: #6b7280 !important;
-            margin-bottom: 12px !important;
-            line-height: 1.5 !important;
+            margin-bottom: 8px !important;
+            line-height: 1.4 !important;
           }
           .product-price-section {
-            background: #ffffff !important;
+            background: transparent !important;
             padding: 0 !important;
-            margin-bottom: 16px !important;
+            margin-bottom: 0 !important;
             border: none !important;
+            border-radius: 0 !important;
+            display: flex !important;
+            align-items: baseline !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
           }
           .product-price-current {
-            font-size: 24px !important;
+            font-size: 20px !important;
             font-weight: 600 !important;
-            color: #1f2937 !important;
-            margin-bottom: 4px !important;
+            color: #111827 !important;
+            margin-bottom: 0 !important;
+            letter-spacing: 0 !important;
           }
           .product-price-old {
             font-size: 14px !important;
-            color: #6b7280 !important;
+            color: #9ca3af !important;
             text-decoration: line-through !important;
-            margin-right: 8px !important;
+            margin-right: 0 !important;
           }
           .product-save {
             font-size: 12px !important;
             font-weight: 500 !important;
             color: #059669 !important;
-            margin-top: 4px !important;
+            margin-top: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border-radius: 0 !important;
+            display: inline !important;
+            border: none !important;
           }
           .product-rating {
             display: flex !important;
             align-items: center !important;
-            gap: 8px !important;
-            margin-bottom: 16px !important;
+            gap: 6px !important;
+            margin-bottom: 0 !important;
             padding: 0 !important;
             background: transparent !important;
             border-radius: 0 !important;
             width: fit-content !important;
+            border: none !important;
+            font-size: 12px !important;
+            color: #6b7280 !important;
           }
           .product-button {
             width: 100% !important;
             max-width: 100% !important;
-            padding: 14px 24px !important;
+            padding: 14px 20px !important;
             background: linear-gradient(to right, #F59E0B, #FBBF24) !important;
             color: #000 !important;
             border: none !important;
-            border-radius: 9999px !important;
-            font-size: 1rem !important;
+            border-radius: 4px !important;
+            font-size: 14px !important;
             font-weight: 500 !important;
             cursor: pointer !important;
-            box-shadow: 0 10px 15px rgba(0,0,0,0.2) !important;
-            transition: all 0.3s !important;
-            text-transform: none !important;
-            letter-spacing: 0 !important;
-            margin-bottom: 12px !important;
+            box-shadow: none !important;
+            transition: all 0.2s !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            margin-bottom: 0 !important;
           }
           .product-button:hover {
-            box-shadow: 0 12px 20px rgba(0,0,0,0.3) !important;
-            transform: translateY(-2px) !important;
+            opacity: 0.9 !important;
+          }
+          .product-button:active {
+            opacity: 0.8 !important;
           }
           .product-button:disabled {
             opacity: 0.6 !important;
@@ -385,12 +409,124 @@ export default function ProductDetailCard() {
             background: linear-gradient(to right, #d1d5db, #9ca3af) !important;
           }
           .product-additional-sections {
-            padding: 0 16px !important;
-            margin-top: 30px !important;
+            padding: 0 !important;
+            margin-top: 0 !important;
+            background: #f5f5f5 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
           }
           .product-section-card {
-            padding: 16px !important;
-            margin-bottom: 20px !important;
+            padding: 14px 16px !important;
+            margin: 0 !important;
+            background: white !important;
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+          .product-info-box {
+            background: white !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 14px 16px !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+          }
+          .delivery-check-card {
+            background: white !important;
+            padding: 14px 16px !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+          .offer-card {
+            background: white !important;
+            padding: 14px 16px !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+          /* Quantity Selector Mobile Styles */
+          .quantity-selector {
+            margin-bottom: 16px !important;
+            display: none !important;
+          }
+          .quantity-controls {
+            display: none !important;
+          }
+          /* Image Pagination Dots */
+          .image-pagination {
+            display: flex !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            padding: 12px 0 !important;
+            background: white !important;
+          }
+          .image-dot {
+            width: 6px !important;
+            height: 6px !important;
+            border-radius: 50% !important;
+            background: #d1d5db !important;
+            transition: all 0.2s !important;
+          }
+          .image-dot.active {
+            background: #F59E0B !important;
+            width: 20px !important;
+            border-radius: 3px !important;
+          }
+          /* Action Buttons Container */
+          .action-buttons-container {
+            display: flex !important;
+            gap: 12px !important;
+            margin: 0 !important;
+            padding: 14px 16px !important;
+            background: white !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+          }
+          .wishlist-button {
+            flex: 1 !important;
+            padding: 14px 20px !important;
+            background: white !important;
+            color: #111827 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 4px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            transition: all 0.2s !important;
+          }
+          .wishlist-button:active {
+            background: #f9fafb !important;
+          }
+          .add-to-cart-button {
+            flex: 2 !important;
+            padding: 14px 20px !important;
+            background: linear-gradient(to right, #F59E0B, #FBBF24) !important;
+            color: #000 !important;
+            border: none !important;
+            border-radius: 4px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            transition: all 0.2s !important;
+          }
+          .add-to-cart-button:active {
+            opacity: 0.9 !important;
           }
         }
         @media (min-width: 768px) {
@@ -574,74 +710,121 @@ export default function ProductDetailCard() {
                         : "1px solid #eee",
                     borderRadius: 5,
                   }}
-                  onClick={() => setSelectedImg(img)}
+                  onClick={() => {
+                    setSelectedImg(img);
+                    setCurrentImageIndex(index);
+                  }}
                 />
               ))}
             </div>
 
-            <img
-              src={selectedImg}
-              alt="Main product"
-              className="product-main-image"
-            />
+            <div style={{ position: "relative" }}>
+              <img
+                src={selectedImg}
+                alt="Main product"
+                className="product-main-image"
+              />
+              {/* Rating Overlay - Mobile Only */}
+              <div style={{
+                position: "absolute",
+                bottom: "12px",
+                right: "12px",
+                background: "rgba(0, 0, 0, 0.6)",
+                backdropFilter: "blur(4px)",
+                borderRadius: "20px",
+                padding: "6px 12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                fontSize: "12px",
+                color: "white",
+                fontWeight: "500"
+              }} className="md:hidden">
+                <span style={{ color: "#fbbf24" }}>★</span>
+                <span>{product.rating.toFixed(1)}</span>
+                <span style={{ marginLeft: "4px", opacity: 0.8 }}>{product.ratingCount}</span>
+              </div>
+            </div>
+
+            {/* Image Pagination Dots - Mobile Only */}
+            {galleryImages.length > 1 && (
+              <div className="image-pagination md:hidden">
+                {galleryImages.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`image-dot ${currentImageIndex === index ? 'active' : ''}`}
+                    onClick={() => {
+                      setSelectedImg(galleryImages[index]);
+                      setCurrentImageIndex(index);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product details */}
           <div className="product-details-section">
-            <h1 className="product-title">
-              {product.product}
-            </h1>
-            <p className="product-subtitle">
-              {product.subtitle}
-            </p>
+            {/* Product Info Card */}
+            <div className="product-info-card">
+              <h1 className="product-title">
+                {product.product}
+              </h1>
+              <p className="product-subtitle">
+                {product.subtitle}
+              </p>
 
-            {/* Rating */}
-            <div className="product-rating">
-              <div style={{ display: "flex", gap: 2 }}>
-                {[...Array(5)].map((_, i) => (
-                  <span
-                    key={i}
-                    style={{ 
-                      color: i < product.rating ? "#fbbf24" : "#d1d5db",
-                      fontSize: "14px"
-                    }}
-                  >
-                    ★
-                  </span>
-                ))}
-              </div>
-              <span style={{ color: "#6b7280", fontSize: 13, fontWeight: 400 }}>
-                ({product.ratingCount} reviews)
-              </span>
-            </div>
-
-            {/* Price */}
-            <div className="product-price-section">
-              <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "12px" }}>
-                <span className="product-price-current">
-                  ₹{product.salePrice.toLocaleString()}
-                </span>
-                {product.oldPrice && (
-                  <span className="product-price-old">
-                    ₹{product.oldPrice.toLocaleString()}
-                  </span>
-                )}
-              </div>
-              {product.oldPrice && product.salePrice && (
-                <div className="product-save">
-                  You Save ₹{(product.oldPrice - product.salePrice).toLocaleString()} ({Math.round(((product.oldPrice - product.salePrice) / product.oldPrice) * 100)}% OFF)
+              {/* Rating */}
+              <div className="product-rating">
+                <div style={{ display: "flex", gap: 2 }}>
+                  {[...Array(5)].map((_, i) => (
+                    <span
+                      key={i}
+                      style={{ 
+                        color: i < product.rating ? "#fbbf24" : "#d1d5db",
+                        fontSize: "14px"
+                      }}
+                    >
+                      ★
+                    </span>
+                  ))}
                 </div>
-              )}
+                <span style={{ color: "#6b7280", fontSize: 13, fontWeight: 400 }}>
+                  ({product.ratingCount} reviews)
+                </span>
+              </div>
+
+              {/* Price */}
+              <div className="product-price-section">
+                <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "8px" }}>
+                  <span className="product-price-current">
+                    ₹{product.salePrice.toLocaleString()}
+                  </span>
+                  {product.oldPrice && (
+                    <>
+                      <span className="product-price-old">
+                        ₹{product.oldPrice.toLocaleString()}
+                      </span>
+                      {product.oldPrice && product.salePrice && (
+                        <span className="product-save">
+                          ({Math.round(((product.oldPrice - product.salePrice) / product.oldPrice) * 100)}% OFF)
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Quantity Selector */}
-            <div style={{ marginBottom: "16px" }}>
+            <div style={{ marginBottom: "16px" }} className="quantity-selector">
               <label style={{ display: "block", fontSize: "14px", fontWeight: "500", marginBottom: "8px", color: "#374151" }}>
                 Quantity:
               </label>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }} className="quantity-controls">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="quantity-btn quantity-minus"
                   style={{
                     width: "36px",
                     height: "36px",
@@ -662,6 +845,7 @@ export default function ProductDetailCard() {
                   min="1"
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="quantity-input"
                   style={{
                     width: "60px",
                     height: "36px",
@@ -673,6 +857,7 @@ export default function ProductDetailCard() {
                 />
                 <button
                   onClick={() => setQuantity(quantity + 1)}
+                  className="quantity-btn quantity-plus"
                   style={{
                     width: "36px",
                     height: "36px",
@@ -691,10 +876,47 @@ export default function ProductDetailCard() {
               </div>
             </div>
 
-            {/* Stock & Delivery Info */}
-            <div className="product-info-box" style={{ 
-              marginBottom: "20px"
-            }}>
+            {/* Check Delivery & Services Card */}
+            <div className="delivery-check-card">
+              <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px", color: "#111827" }}>
+                CHECK DELIVERY & SERVICES
+              </h3>
+              <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+                <input
+                  type="text"
+                  placeholder="Enter a PIN code"
+                  maxLength={6}
+                  style={{
+                    flex: 1,
+                    padding: "10px 12px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "4px",
+                    fontSize: "14px"
+                  }}
+                />
+                <button
+                  style={{
+                    padding: "10px 20px",
+                    background: "linear-gradient(to right, #F59E0B, #FBBF24)",
+                    color: "#000",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    cursor: "pointer"
+                  }}
+                >
+                  CHECK
+                </button>
+              </div>
+              <div style={{ fontSize: "12px", color: "#6b7280", lineHeight: "1.5" }}>
+                <div style={{ marginBottom: "4px" }}>Pay on delivery might be available</div>
+                <div>Easy 14 days returns and exchanges</div>
+              </div>
+            </div>
+
+            {/* Stock & Delivery Info Card */}
+            <div className="product-info-box">
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                 <span style={{ color: "#059669", fontSize: "16px" }}>✓</span>
                 <span style={{ fontSize: "14px", fontWeight: "500", color: "#065f46" }}>In Stock</span>
@@ -706,8 +928,29 @@ export default function ProductDetailCard() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+            {/* Action Buttons - Myntra Style Side by Side for Mobile */}
+            <div className="action-buttons-container md:hidden">
+              <button
+                className="wishlist-button"
+                onClick={() => {
+                  // Wishlist functionality can be added later
+                  alert("Wishlist feature coming soon!");
+                }}
+              >
+                <span>♡</span>
+                <span>Wishlist</span>
+              </button>
+              <button
+                onClick={handleAddToCart}
+                disabled={addingToCart}
+                className="add-to-cart-button"
+              >
+                {addingToCart ? "Adding..." : "Add to Cart"}
+              </button>
+            </div>
+
+            {/* Desktop Action Buttons */}
+            <div className="hidden md:flex flex-col gap-3" style={{ marginBottom: "20px" }}>
               <button
                 onClick={handleAddToCart}
                 disabled={addingToCart}
