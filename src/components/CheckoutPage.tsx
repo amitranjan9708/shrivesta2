@@ -1,9 +1,62 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, MapPin, CreditCard, Loader, ExternalLink } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, Loader, ExternalLink, Check, Edit2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { apiService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+
+// Mobile styles for checkout page
+const checkoutMobileStyles = `
+  @media (max-width: 767px) {
+    .checkout-page-wrapper {
+      padding-top: 0 !important;
+      background: #f5f5f5 !important;
+    }
+    .checkout-container {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      padding-top: 0 !important;
+      max-width: 100% !important;
+      background: #f5f5f5 !important;
+    }
+    .checkout-card {
+      background: white !important;
+      border-radius: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 14px 16px !important;
+      margin-bottom: 8px !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .checkout-card h2 {
+      font-size: 13px !important;
+      font-weight: 500 !important;
+      color: #000000 !important;
+      letter-spacing: 0.3px !important;
+      margin-bottom: 12px !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .checkout-card label {
+      font-size: 12px !important;
+      color: #1a1a1a !important;
+      font-weight: 400 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .checkout-card input,
+    .checkout-card textarea {
+      font-size: 12px !important;
+      color: #000000 !important;
+      font-weight: 400 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+    .checkout-card div {
+      font-size: 12px !important;
+      color: #1a1a1a !important;
+      font-weight: 400 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    }
+  }
+`;
 
 // Payment Button Component - Redirects to Stripe Checkout
 function PaymentButton({
@@ -78,7 +131,7 @@ function PaymentButton({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-sm text-red-800">{error}</p>
@@ -101,25 +154,29 @@ function PaymentButton({
         </ul>
       </div>
 
-      <Button
-        type="button"
-        onClick={handlePayment}
-        disabled={processing || !shippingAddress || pincode.length !== 6}
-        className="w-full flex items-center justify-center gap-2"
+      <div className="w-full">
+        <Button
+          type="button"
+          onClick={handlePayment}
+          disabled={processing || !shippingAddress || pincode.length !== 6}
+          className="w-full flex items-center justify-center gap-2"
         style={{
           background: processing || !shippingAddress || pincode.length !== 6 
             ? 'linear-gradient(to right, #d1d5db, #9ca3af)' 
             : 'linear-gradient(to right, #F59E0B, #FBBF24)',
-          color: '#000',
-          padding: '16px 32px',
+          color: processing || !shippingAddress || pincode.length !== 6 ? '#666' : '#000',
+          padding: '16px 24px',
           borderRadius: '9999px',
-          fontSize: '1.125rem',
+          fontSize: '14px',
           fontWeight: 500,
           cursor: processing || !shippingAddress || pincode.length !== 6 ? 'not-allowed' : 'pointer',
           transition: 'all 0.3s',
-          boxShadow: '0 10px 15px rgba(0,0,0,0.2)',
           border: 'none',
-          opacity: processing || !shippingAddress || pincode.length !== 6 ? 0.6 : 1
+          opacity: processing || !shippingAddress || pincode.length !== 6 ? 0.6 : 1,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+          boxShadow: processing || !shippingAddress || pincode.length !== 6 ? 'none' : '0 10px 15px rgba(0,0,0,0.2)'
         }}
         onMouseEnter={(e) => {
           if (!processing && shippingAddress && pincode.length === 6) {
@@ -128,7 +185,7 @@ function PaymentButton({
           }
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
+          e.currentTarget.style.boxShadow = processing || !shippingAddress || pincode.length !== 6 ? 'none' : '0 10px 15px rgba(0,0,0,0.2)';
           e.currentTarget.style.transform = 'translateY(0)';
         }}
       >
@@ -143,7 +200,8 @@ function PaymentButton({
             Pay ₹{amount.toFixed(2)} - Continue to Payment
           </>
         )}
-      </Button>
+        </Button>
+      </div>
     </div>
   );
 }
@@ -387,104 +445,100 @@ export function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center mb-8">
-          <button
-            onClick={() => navigate("/cart")}
-            className="flex items-center text-amber-600 hover:text-amber-700 mr-4"
-          >
-            <ArrowLeft className="h-5 w-5 mr-1" />
-            Back to Cart
-          </button>
-        </div>
+    <>
+      <style>{checkoutMobileStyles}</style>
+      <div className="min-h-screen bg-gray-50 py-8 pt-0 pb-24 lg:pb-8 lg:pt-8 checkout-page-wrapper">
+        <div className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 checkout-container">
+          {/* Myntra-style Mobile Header */}
+          <div className="md:hidden mb-2">
+            <div className="bg-white px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button onClick={() => navigate("/cart")} className="text-black">
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+                <span style={{ fontSize: '14px', fontWeight: '500', color: '#000', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>CHECKOUT</span>
+              </div>
+              <span style={{ fontSize: '12px', fontWeight: '400', color: '#666', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>STEP 2/3</span>
+            </div>
+          </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Desktop Header */}
+          <div className="hidden md:flex items-center mb-8 px-4 sm:px-6 lg:px-8">
+            <button
+              onClick={() => navigate("/cart")}
+              className="flex items-center text-amber-600 hover:text-amber-700 mr-4"
+            >
+              <ArrowLeft className="h-5 w-5 mr-1" />
+              Back to Cart
+            </button>
+          </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-8">
           {/* Checkout Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h1 className="text-2xl font-bold text-gray-900 mb-6">
+            <div className="bg-white rounded-lg shadow-sm p-6 md:bg-white md:rounded-lg md:shadow-sm md:p-6 checkout-card md:mb-0">
+              <h1 className="text-2xl font-bold text-gray-900 mb-6 md:text-2xl md:font-bold md:text-gray-900 md:mb-6" style={{ fontSize: '18px', fontWeight: '500', color: '#000', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
                 Checkout
               </h1>
 
               {/* Shipping Address */}
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-4 flex items-center">
-                  <MapPin className="h-5 w-5 mr-2" />
-                  Shipping Address
+              <div className="mb-6 md:mb-6">
+                <h2 className="text-lg font-semibold mb-4 flex items-center md:text-lg md:font-semibold md:mb-4" style={{ fontSize: '13px', fontWeight: '500', color: '#000', marginBottom: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Delivery Address
                 </h2>
                 
                 {user && (
-                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm text-amber-900">
-                      <span className="font-semibold">Delivering to:</span> {user.name}
+                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg md:mb-4 md:p-3 md:bg-amber-50 md:border md:border-amber-200 md:rounded-lg">
+                    <p className="text-sm text-amber-900 md:text-sm md:text-amber-900" style={{ fontSize: '12px', color: '#92400e', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                      <span style={{ fontWeight: '500' }}>Delivering to:</span> {user.name}
                     </p>
-                    {savedAddress && !addressLoading && (
-                      <p className="text-xs text-amber-700 mt-1">
-                        Your saved address has been pre-filled below. You can edit it if needed.
-                      </p>
-                    )}
                   </div>
                 )}
 
                 {addressLoading ? (
-                  <div className="flex items-center justify-center py-8">
+                  <div className="flex items-center justify-center py-8 md:py-8">
                     <Loader className="h-6 w-6 animate-spin text-amber-500 mr-2" />
-                    <span className="text-gray-600">Loading your saved address...</span>
+                    <span className="text-gray-600 md:text-gray-600" style={{ fontSize: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>Loading your saved address...</span>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-4 md:space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Address {savedAddress && <span className="text-green-600 text-xs">(Pre-filled from your profile)</span>}
+                      <label className="block text-sm font-medium text-gray-700 mb-2 md:block md:text-sm md:font-medium md:text-gray-700 md:mb-2" style={{ fontSize: '12px', fontWeight: '400', color: '#1a1a1a', marginBottom: '8px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                        Address {savedAddress && <span style={{ color: '#059669', fontSize: '11px' }}>(Pre-filled)</span>}
                       </label>
                       <textarea
                         value={shippingAddress}
                         onChange={(e) => setShippingAddress(e.target.value)}
-                        placeholder="Enter your complete address including street, city, state, and pincode"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        placeholder="Enter your complete address"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent md:w-full md:px-4 md:py-2 md:border md:border-gray-300 md:rounded-lg"
                         rows={4}
                         required
+                        style={{ fontSize: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
                       />
-                      {!savedAddress && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          This address will be saved to your profile for future orders.
-                        </p>
-                      )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Pincode {savedPincode && <span className="text-green-600 text-xs">(Pre-filled from your profile)</span>}
+                      <label className="block text-sm font-medium text-gray-700 mb-2 md:block md:text-sm md:font-medium md:text-gray-700 md:mb-2" style={{ fontSize: '12px', fontWeight: '400', color: '#1a1a1a', marginBottom: '8px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                        Pincode {savedPincode && <span style={{ color: '#059669', fontSize: '11px' }}>(Pre-filled)</span>}
                       </label>
                       <input
                         type="text"
                         value={pincode}
                         onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                         placeholder="Enter 6-digit pincode"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent md:w-full md:px-4 md:py-2 md:border md:border-gray-300 md:rounded-lg"
                         maxLength={6}
                         required
+                        style={{ fontSize: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
                       />
-                      {!savedPincode && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          This pincode will be saved to your profile for future orders.
-                        </p>
-                      )}
                     </div>
-                    {savedAddress && shippingAddress !== savedAddress && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <p className="text-sm text-blue-800">
-                          Your address has been updated. It will be saved to your profile when you complete the payment.
-                        </p>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
 
-              {/* Payment Section */}
+              {/* Payment Section - Desktop Only */}
               {!addressLoading && shippingAddress && pincode.length === 6 ? (
-                <div className="mb-6">
+                <div className="mb-6 hidden md:block w-full">
                   <PaymentButton
                     amount={totalAmount}
                     shippingAddress={shippingAddress}
@@ -497,8 +551,8 @@ export function CheckoutPage() {
                   />
                 </div>
               ) : !addressLoading ? (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-sm text-yellow-800">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 hidden md:block w-full">
+                  <p className="text-sm text-yellow-800" style={{ fontSize: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
                     Please fill in your shipping address and pincode to proceed with payment.
                   </p>
                 </div>
@@ -507,42 +561,42 @@ export function CheckoutPage() {
           </div>
 
           {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          <div className="lg:col-span-1 md:lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8 md:bg-white md:rounded-lg md:shadow-sm md:p-6 md:sticky md:top-8 checkout-card md:mb-0">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6 md:text-xl md:font-semibold md:text-gray-900 md:mb-6" style={{ fontSize: '13px', fontWeight: '500', color: '#000', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
                 Order Summary
               </h2>
 
               {cartData?.items && (
-                <div className="space-y-4">
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="space-y-4 md:space-y-4">
+                  <div className="space-y-2 max-h-60 overflow-y-auto md:space-y-2 md:max-h-60 md:overflow-y-auto">
                     {cartData.items.map((item: any) => (
-                      <div key={item.id} className="flex justify-between text-sm">
-                        <span className="text-gray-600">
+                      <div key={item.id} className="flex justify-between text-sm md:flex md:justify-between md:text-sm" style={{ fontSize: '12px', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                        <span className="text-gray-600 md:text-gray-600" style={{ fontSize: '12px', color: '#1a1a1a' }}>
                           {item.product?.product || item.name} x {item.quantity}
                         </span>
-                        <span className="font-medium">
-                          ₹{(item.product?.salePrice || item.price) * item.quantity}
+                        <span className="font-medium md:font-medium" style={{ fontSize: '12px', color: '#1a1a1a', fontWeight: '400' }}>
+                          ₹{((item.product?.salePrice || item.price) * item.quantity).toLocaleString()}
                         </span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="border-t border-gray-200 pt-4 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium">₹{cartData.summary?.subtotal || 0}</span>
+                  <div className="border-t border-gray-200 pt-4 space-y-2 md:border-t md:border-gray-200 md:pt-4 md:space-y-2">
+                    <div className="flex justify-between md:flex md:justify-between">
+                      <span className="text-gray-600 md:text-gray-600" style={{ fontSize: '12px', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>Subtotal</span>
+                      <span className="font-medium md:font-medium" style={{ fontSize: '12px', color: '#1a1a1a', fontWeight: '400', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>₹{(cartData.summary?.subtotal || 0).toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Shipping</span>
-                      <span className={`font-medium ${cartData.summary?.shipping === 0 ? 'text-green-600' : ''}`}>
-                        {cartData.summary?.shipping === 0 ? 'FREE' : `₹${cartData.summary?.shipping || 0}`}
+                    <div className="flex justify-between md:flex md:justify-between">
+                      <span className="text-gray-600 md:text-gray-600" style={{ fontSize: '12px', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>Shipping</span>
+                      <span className={`font-medium md:font-medium ${cartData.summary?.shipping === 0 ? 'text-green-600' : ''}`} style={{ fontSize: '12px', color: cartData.summary?.shipping === 0 ? '#059669' : '#1a1a1a', fontWeight: '400', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                        {cartData.summary?.shipping === 0 ? 'FREE' : `₹${(cartData.summary?.shipping || 0).toLocaleString()}`}
                       </span>
                     </div>
-                    <div className="border-t border-gray-200 pt-2">
-                      <div className="flex justify-between text-lg font-semibold">
-                        <span>Total</span>
-                        <span>₹{cartData.summary?.total || totalAmount}</span>
+                    <div className="border-t border-gray-200 pt-2 md:border-t md:border-gray-200 md:pt-2">
+                      <div className="flex justify-between text-lg font-semibold md:flex md:justify-between md:text-lg md:font-semibold">
+                        <span style={{ fontSize: '13px', fontWeight: '500', color: '#000', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>Total</span>
+                        <span style={{ fontSize: '18px', fontWeight: '500', color: '#000', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>₹{(cartData.summary?.total || totalAmount).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -552,6 +606,23 @@ export function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Sticky Payment Button */}
+      {!addressLoading && shippingAddress && pincode.length === 6 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50 p-4">
+          <PaymentButton
+            amount={totalAmount}
+            shippingAddress={shippingAddress}
+            pincode={pincode}
+            customerEmail={user?.email}
+            customerName={user?.name}
+            savedAddress={savedAddress}
+            savedPincode={savedPincode}
+            onError={handlePaymentError}
+          />
+        </div>
+      )}
     </div>
+    </>
   );
 }
