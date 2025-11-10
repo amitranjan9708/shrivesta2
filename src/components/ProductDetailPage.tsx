@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { apiService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+import { Check } from "lucide-react";
 
 interface Product {
   id: number;
@@ -42,6 +43,10 @@ export default function ProductDetailCard() {
   const [error, setError] = useState("");
   const [selectedImg, setSelectedImg] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const [pincode, setPincode] = useState("");
+  const [isDeliverable, setIsDeliverable] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -267,6 +272,38 @@ export default function ProductDetailCard() {
       ? product.imageUrls
       : [selectedImg];
 
+  // Swipe handlers for mobile image navigation
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(0);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && currentImageIndex < galleryImages.length - 1) {
+      // Swipe left - next image
+      const nextIndex = currentImageIndex + 1;
+      setCurrentImageIndex(nextIndex);
+      setSelectedImg(galleryImages[nextIndex]);
+    } else if (isRightSwipe && currentImageIndex > 0) {
+      // Swipe right - previous image
+      const prevIndex = currentImageIndex - 1;
+      setCurrentImageIndex(prevIndex);
+      setSelectedImg(galleryImages[prevIndex]);
+    }
+  };
+
   return (
     <>
       <style>{`
@@ -301,6 +338,17 @@ export default function ProductDetailCard() {
             border: none !important;
             display: block !important;
             aspect-ratio: 3/4 !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+          }
+          .product-image-swipe-container {
+            touch-action: pan-x pan-y !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            cursor: grab !important;
+          }
+          .product-image-swipe-container:active {
+            cursor: grabbing !important;
           }
           .product-details-section {
             padding: 0 !important;
@@ -317,20 +365,24 @@ export default function ProductDetailCard() {
             border-radius: 0 !important;
             border: none !important;
             box-shadow: none !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           }
           .product-title {
-            font-size: 16px !important;
-            font-weight: 500 !important;
-            line-height: 1.4 !important;
-            margin-bottom: 6px !important;
-            color: #111827 !important;
+            font-size: 14px !important;
+            font-weight: 400 !important;
+            line-height: 1.5 !important;
+            margin-bottom: 8px !important;
+            color: #000000 !important;
             letter-spacing: 0 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           }
           .product-subtitle {
-            font-size: 13px !important;
-            color: #6b7280 !important;
-            margin-bottom: 8px !important;
+            font-size: 12px !important;
+            color: #1a1a1a !important;
+            margin-bottom: 10px !important;
             line-height: 1.4 !important;
+            font-weight: 400 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           }
           .product-price-section {
             background: transparent !important;
@@ -344,28 +396,32 @@ export default function ProductDetailCard() {
             flex-wrap: wrap !important;
           }
           .product-price-current {
-            font-size: 20px !important;
-            font-weight: 600 !important;
-            color: #111827 !important;
+            font-size: 18px !important;
+            font-weight: 500 !important;
+            color: #000000 !important;
             margin-bottom: 0 !important;
             letter-spacing: 0 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           }
           .product-price-old {
             font-size: 14px !important;
-            color: #9ca3af !important;
+            color: #666666 !important;
             text-decoration: line-through !important;
             margin-right: 0 !important;
+            font-weight: 400 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           }
           .product-save {
-            font-size: 12px !important;
-            font-weight: 500 !important;
-            color: #059669 !important;
+            font-size: 13px !important;
+            font-weight: 400 !important;
+            color: #ff3f6c !important;
             margin-top: 0 !important;
             padding: 0 !important;
             background: transparent !important;
             border-radius: 0 !important;
             display: inline !important;
             border: none !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           }
           .product-rating {
             display: flex !important;
@@ -377,8 +433,10 @@ export default function ProductDetailCard() {
             border-radius: 0 !important;
             width: fit-content !important;
             border: none !important;
-            font-size: 12px !important;
-            color: #6b7280 !important;
+            font-size: 11px !important;
+            color: #1a1a1a !important;
+            font-weight: 400 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           }
           .product-button {
             width: 100% !important;
@@ -423,6 +481,10 @@ export default function ProductDetailCard() {
             border-radius: 0 !important;
             border: none !important;
             box-shadow: none !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+          }
+          .product-section-card * {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           }
           .product-info-box {
             background: white !important;
@@ -431,6 +493,7 @@ export default function ProductDetailCard() {
             padding: 14px 16px !important;
             margin: 0 !important;
             box-shadow: none !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           }
           .delivery-check-card {
             background: white !important;
@@ -439,6 +502,30 @@ export default function ProductDetailCard() {
             border-radius: 0 !important;
             border: none !important;
             box-shadow: none !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+          }
+          .delivery-check-card h3 {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            font-weight: 500 !important;
+            letter-spacing: 0.3px !important;
+            color: #000000 !important;
+          }
+          .delivery-check-card input {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            font-size: 14px !important;
+            font-weight: 400 !important;
+            color: #000000 !important;
+          }
+          .delivery-check-card button {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            font-weight: 500 !important;
+            letter-spacing: 0.3px !important;
+            color: #000000 !important;
+          }
+          .delivery-check-card div {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            font-weight: 400 !important;
+            color: #1a1a1a !important;
           }
           .offer-card {
             background: white !important;
@@ -447,6 +534,18 @@ export default function ProductDetailCard() {
             border-radius: 0 !important;
             border: none !important;
             box-shadow: none !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+          }
+          .product-info-box {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+          }
+          .product-info-box span {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            font-weight: 400 !important;
+          }
+          .product-info-box div {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            font-weight: 400 !important;
           }
           /* Quantity Selector Mobile Styles */
           .quantity-selector {
@@ -490,10 +589,10 @@ export default function ProductDetailCard() {
             flex: 1 !important;
             padding: 14px 20px !important;
             background: white !important;
-            color: #111827 !important;
-            border: 1px solid #d1d5db !important;
+            color: #000000 !important;
+            border: 1px solid #d4d5d9 !important;
             border-radius: 4px !important;
-            font-size: 14px !important;
+            font-size: 13px !important;
             font-weight: 500 !important;
             cursor: pointer !important;
             text-transform: uppercase !important;
@@ -503,9 +602,10 @@ export default function ProductDetailCard() {
             justify-content: center !important;
             gap: 6px !important;
             transition: all 0.2s !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           }
           .wishlist-button:active {
-            background: #f9fafb !important;
+            background: #f5f5f6 !important;
           }
           .add-to-cart-button {
             flex: 2 !important;
@@ -514,7 +614,7 @@ export default function ProductDetailCard() {
             color: #000 !important;
             border: none !important;
             border-radius: 4px !important;
-            font-size: 14px !important;
+            font-size: 13px !important;
             font-weight: 500 !important;
             cursor: pointer !important;
             text-transform: uppercase !important;
@@ -524,6 +624,7 @@ export default function ProductDetailCard() {
             justify-content: center !important;
             gap: 6px !important;
             transition: all 0.2s !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
           }
           .add-to-cart-button:active {
             opacity: 0.9 !important;
@@ -718,7 +819,13 @@ export default function ProductDetailCard() {
               ))}
             </div>
 
-            <div style={{ position: "relative" }}>
+            <div 
+              className="product-image-swipe-container"
+              style={{ position: "relative" }}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
               <img
                 src={selectedImg}
                 alt="Main product"
@@ -878,7 +985,7 @@ export default function ProductDetailCard() {
 
             {/* Check Delivery & Services Card */}
             <div className="delivery-check-card">
-              <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px", color: "#111827" }}>
+              <h3 style={{ fontSize: "13px", fontWeight: "500", marginBottom: "12px", color: "#000000", letterSpacing: "0.3px" }}>
                 CHECK DELIVERY & SERVICES
               </h3>
               <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
@@ -886,15 +993,30 @@ export default function ProductDetailCard() {
                   type="text"
                   placeholder="Enter a PIN code"
                   maxLength={6}
+                  value={pincode}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    setPincode(value);
+                    if (value.length === 6) {
+                      setIsDeliverable(true);
+                    } else {
+                      setIsDeliverable(false);
+                    }
+                  }}
                   style={{
                     flex: 1,
                     padding: "10px 12px",
-                    border: "1px solid #d1d5db",
+                    border: isDeliverable ? "1px solid #059669" : "1px solid #d1d5db",
                     borderRadius: "4px",
                     fontSize: "14px"
                   }}
                 />
                 <button
+                  onClick={() => {
+                    if (pincode.length === 6) {
+                      setIsDeliverable(true);
+                    }
+                  }}
                   style={{
                     padding: "10px 20px",
                     background: "linear-gradient(to right, #F59E0B, #FBBF24)",
@@ -909,7 +1031,24 @@ export default function ProductDetailCard() {
                   CHECK
                 </button>
               </div>
-              <div style={{ fontSize: "12px", color: "#6b7280", lineHeight: "1.5" }}>
+              {isDeliverable && pincode.length === 6 && (
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "8px", 
+                  marginBottom: "12px",
+                  padding: "10px",
+                  background: "#f0fdf4",
+                  borderRadius: "6px",
+                  border: "1px solid #86efac"
+                }}>
+                  <Check className="h-5 w-5 text-green-600" style={{ flexShrink: 0 }} />
+                  <span style={{ fontSize: "13px", color: "#059669", fontWeight: "400" }}>
+                    Deliverable to {pincode}
+                  </span>
+                </div>
+              )}
+              <div style={{ fontSize: "12px", color: "#1a1a1a", lineHeight: "1.5", fontWeight: "400" }}>
                 <div style={{ marginBottom: "4px" }}>Pay on delivery might be available</div>
                 <div>Easy 14 days returns and exchanges</div>
               </div>
@@ -919,9 +1058,9 @@ export default function ProductDetailCard() {
             <div className="product-info-box">
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                 <span style={{ color: "#059669", fontSize: "16px" }}>✓</span>
-                <span style={{ fontSize: "14px", fontWeight: "500", color: "#065f46" }}>In Stock</span>
+                <span style={{ fontSize: "13px", fontWeight: "400", color: "#000000" }}>In Stock</span>
               </div>
-              <div style={{ fontSize: "13px", color: "#047857", marginLeft: "24px" }}>
+              <div style={{ fontSize: "12px", color: "#1a1a1a", marginLeft: "24px", fontWeight: "400" }}>
                 {product.salePrice > 999 
                   ? "FREE delivery available. Order within 12 hours for fastest delivery."
                   : `Add ₹${Math.ceil(1000 - product.salePrice)} more for FREE delivery. Order within 12 hours for fastest delivery.`}
@@ -1016,10 +1155,10 @@ export default function ProductDetailCard() {
             <div className="product-highlights-box" style={{ 
               marginTop: "24px"
             }}>
-              <h3 style={{ fontSize: "17px", fontWeight: "600", marginBottom: "14px", color: "#111827" }}>
+              <h3 style={{ fontSize: "14px", fontWeight: "500", marginBottom: "14px", color: "#000000", letterSpacing: "0.3px" }}>
                 Product Highlights
               </h3>
-              <ul style={{ margin: 0, paddingLeft: "22px", fontSize: "14px", color: "#374151", lineHeight: "2" }}>
+              <ul style={{ margin: 0, paddingLeft: "22px", fontSize: "12px", color: "#1a1a1a", lineHeight: "1.8", fontWeight: "400" }}>
                 <li style={{ marginBottom: "6px" }}>
                   {product.rating >= 4 ? "Highly rated product" : "Quality assured product"}
                 </li>
@@ -1047,14 +1186,15 @@ export default function ProductDetailCard() {
               background: "#f9fafb", 
               borderRadius: "6px",
               border: "1px solid #e5e7eb",
-              fontSize: "13px", 
-              color: "#4b5563",
-              lineHeight: "1.8"
+              fontSize: "12px", 
+              color: "#1a1a1a",
+              lineHeight: "1.8",
+              fontWeight: "400"
             }}>
               <div style={{ marginBottom: "10px", display: "flex", alignItems: "flex-start", gap: "8px" }}>
                 <span style={{ color: "#059669", fontSize: "16px" }}>✓</span>
                 <div>
-                  <strong style={{ color: "#111827", display: "block", marginBottom: "2px" }}>Delivery:</strong>
+                  <strong style={{ color: "#000000", display: "block", marginBottom: "2px", fontWeight: "500", fontSize: "13px" }}>Delivery:</strong>
                   <span>
                     {product.salePrice > 999 
                       ? "FREE delivery on orders over ₹999. Usually dispatched within 1-2 business days."
@@ -1065,14 +1205,14 @@ export default function ProductDetailCard() {
               <div style={{ marginBottom: "10px", display: "flex", alignItems: "flex-start", gap: "8px" }}>
                 <span style={{ color: "#059669", fontSize: "16px" }}>✓</span>
                 <div>
-                  <strong style={{ color: "#111827", display: "block", marginBottom: "2px" }}>Returns:</strong>
+                  <strong style={{ color: "#000000", display: "block", marginBottom: "2px", fontWeight: "500", fontSize: "13px" }}>Returns:</strong>
                   <span>7 days return policy. No questions asked.</span>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
                 <span style={{ color: "#059669", fontSize: "16px" }}>✓</span>
                 <div>
-                  <strong style={{ color: "#111827", display: "block", marginBottom: "2px" }}>Price:</strong>
+                  <strong style={{ color: "#000000", display: "block", marginBottom: "2px", fontWeight: "500", fontSize: "13px" }}>Price:</strong>
                   <span>
                     {product.oldPrice > product.salePrice 
                       ? `You save ₹${(product.oldPrice - product.salePrice).toLocaleString()} (${Math.round(((product.oldPrice - product.salePrice) / product.oldPrice) * 100)}% OFF)`
