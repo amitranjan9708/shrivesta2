@@ -165,11 +165,23 @@ class ApiService {
   async register(userData: { name: string; email: string; password: string }) {
     const response = await this.request<{
       message: string;
-      user: { id: number; name: string; email: string; role: string; isVerified: boolean };
-      verificationEmailSent: boolean;
+      emailSent: boolean;
     }>("/auth/register", {
       method: "POST",
       body: JSON.stringify(userData),
+    });
+
+    return response;
+  }
+
+  async verifyOTP(email: string, otp: string) {
+    const response = await this.request<{
+      message: string;
+      user: { id: number; name: string; email: string; role: string; isVerified: boolean };
+      verificationEmailSent: boolean;
+    }>("/auth/verify-otp", {
+      method: "POST",
+      body: JSON.stringify({ email, otp }),
     });
 
     return response;

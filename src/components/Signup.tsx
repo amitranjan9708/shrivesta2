@@ -3,18 +3,19 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, User, ArrowLeft } from "lucide-react";
 import styled from "styled-components";
-import { useAuth } from "../contexts/AuthContext";
 import { apiService } from "../services/api";
 
 export function Signup() {
   const navigate = useNavigate();
-  const { register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [isResendLoading, setIsResendLoading] = useState(false);
   const [resendMessage, setResendMessage] = useState("");
 
@@ -26,10 +27,11 @@ export function Signup() {
     setResendMessage("");
 
     try {
-      const result = await register(name, email, password);
+      const result = await apiService.register({ name, email, password });
       if (result.success) {
+        setOtpSent(true);
         setSuccessMessage(
-          result.message || "Please verify your email to complete registration."
+          result.data?.message || "OTP sent to your email. Please check your inbox."
         );
       } else {
         setError(result.error || "Registration failed");
@@ -41,26 +43,57 @@ export function Signup() {
     }
   };
 
-  const handleResendEmail = async () => {
+  const handleOTPVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsVerifyingOTP(true);
+    setError("");
+    setSuccessMessage("");
+
+    if (!otp || otp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP");
+      setIsVerifyingOTP(false);
+      return;
+    }
+
+    try {
+      const result = await apiService.verifyOTP(email, otp);
+      if (result.success) {
+        setSuccessMessage(
+          result.data?.message || "Account created successfully! Please check your email to verify your account."
+        );
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          navigate("/login");
+        }, 3000);
+      } else {
+        setError(result.error || "OTP verification failed");
+      }
+    } catch (error) {
+      setError("An unexpected error occurred");
+    } finally {
+      setIsVerifyingOTP(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
     if (!email) {
-      setResendMessage("Enter your email above to resend the verification link.");
+      setResendMessage("Enter your email above to resend the OTP.");
       return;
     }
     setIsResendLoading(true);
     setResendMessage("");
     try {
-      const response = await apiService.resendVerificationEmail(email);
+      const response = await apiService.register({ name, email, password });
       if (response.success) {
         setResendMessage(
-          (response.data as any)?.message ||
-            "Verification email sent again. Please check your inbox."
+          response.data?.message || "OTP sent again. Please check your inbox."
         );
       } else {
-        setResendMessage(response.error || "Unable to resend verification email.");
+        setResendMessage(response.error || "Unable to resend OTP.");
       }
     } catch (err) {
       setResendMessage(
-        "Unable to resend verification email right now. Please try again later."
+        "Unable to resend OTP right now. Please try again later."
       );
     } finally {
       setIsResendLoading(false);
@@ -93,69 +126,99 @@ export function Signup() {
 
           <Subtitle>Join ShriVesta and start shopping</Subtitle>
 
-          <Form onSubmit={handleSubmit}>
-            {error && <ErrorMessage>{error}</ErrorMessage>}
-            {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
+          {!otpSent ? (
+            <Form onSubmit={handleSubmit}>
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+              {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
 
-            <InputGroup>
-              <label>Full Name</label>
-              <InputWrapper>
-                <UserIcon />
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="John Doe"
-                  required
-                  disabled={isLoading}
-                />
-              </InputWrapper>
-            </InputGroup>
+              <InputGroup>
+                <label>Full Name</label>
+                <InputWrapper>
+                  <UserIcon />
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="John Doe"
+                    required
+                    disabled={isLoading}
+                  />
+                </InputWrapper>
+              </InputGroup>
 
-            <InputGroup>
-              <label>Email</label>
-              <InputWrapper>
-                <MailIcon />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  disabled={isLoading}
-                />
-              </InputWrapper>
-            </InputGroup>
+              <InputGroup>
+                <label>Email</label>
+                <InputWrapper>
+                  <MailIcon />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    disabled={isLoading}
+                  />
+                </InputWrapper>
+              </InputGroup>
 
-            <InputGroup>
-              <label>Password</label>
-              <InputWrapper>
-                <LockIcon />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  disabled={isLoading}
-                />
-              </InputWrapper>
-            </InputGroup>
+              <InputGroup>
+                <label>Password</label>
+                <InputWrapper>
+                  <LockIcon />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    disabled={isLoading}
+                  />
+                </InputWrapper>
+              </InputGroup>
 
-            <SubmitButton type="submit" disabled={isLoading}>
-              {isLoading ? "Creating Account..." : "Create Account"}
-            </SubmitButton>
-          </Form>
+              <SubmitButton type="submit" disabled={isLoading}>
+                {isLoading ? "Sending OTP..." : "Send OTP"}
+              </SubmitButton>
+            </Form>
+          ) : (
+            <Form onSubmit={handleOTPVerify}>
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+              {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
 
-          {successMessage && (
+              <InputGroup>
+                <label>Enter OTP</label>
+                <InputWrapper>
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="000000"
+                    required
+                    disabled={isVerifyingOTP}
+                    maxLength={6}
+                    style={{ textAlign: "center", fontSize: "24px", letterSpacing: "8px" }}
+                  />
+                </InputWrapper>
+                <p style={{ fontSize: "12px", color: "#6b7280", marginTop: "5px" }}>
+                  Enter the 6-digit OTP sent to {email}
+                </p>
+              </InputGroup>
+
+              <SubmitButton type="submit" disabled={isVerifyingOTP}>
+                {isVerifyingOTP ? "Verifying..." : "Verify OTP & Create Account"}
+              </SubmitButton>
+            </Form>
+          )}
+
+          {otpSent && !successMessage && (
             <ResendContainer>
-              <p>Didn&apos;t get the email?</p>
+              <p>Didn&apos;t receive the OTP?</p>
               <ResendButton
                 type="button"
-                onClick={handleResendEmail}
+                onClick={handleResendOTP}
                 disabled={isResendLoading}
               >
-                {isResendLoading ? "Resending..." : "Resend verification email"}
+                {isResendLoading ? "Resending..." : "Resend OTP"}
               </ResendButton>
               {resendMessage && <ResendFeedback>{resendMessage}</ResendFeedback>}
             </ResendContainer>
