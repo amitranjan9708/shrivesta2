@@ -82,19 +82,24 @@ export function Signup() {
     }
     setIsResendLoading(true);
     setResendMessage("");
+    setError("");
     try {
-      const response = await apiService.register({ name, email, password });
+      const response = await apiService.resendOTP(email);
       if (response.success) {
         setResendMessage(
           response.data?.message || "OTP sent again. Please check your inbox."
         );
+        setSuccessMessage(
+          response.data?.message || "OTP resent successfully. Please check your inbox."
+        );
       } else {
         setResendMessage(response.error || "Unable to resend OTP.");
+        setError(response.error || "Unable to resend OTP.");
       }
     } catch (err) {
-      setResendMessage(
-        "Unable to resend OTP right now. Please try again later."
-      );
+      const errorMessage = "Unable to resend OTP right now. Please try again later.";
+      setResendMessage(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsResendLoading(false);
     }

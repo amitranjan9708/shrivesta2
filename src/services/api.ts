@@ -187,6 +187,18 @@ class ApiService {
     return response;
   }
 
+  async resendOTP(email: string) {
+    const response = await this.request<{
+      message: string;
+      emailSent: boolean;
+    }>("/auth/resend-otp", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+
+    return response;
+  }
+
   async login(credentials: { email: string; password: string }) {
     const response = await this.request<{ 
       message: string;
