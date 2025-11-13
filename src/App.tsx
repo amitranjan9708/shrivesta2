@@ -28,6 +28,7 @@ import { RequireAdmin } from "./components/admin/RequireAdmin";
 import { VerifyEmailPage } from "./components/VerifyEmailPage";
 import { ResetPasswordPage } from "./components/ResetPasswordPage";
 import { SEO } from "./components/SEO";
+import { AdSense } from "./components/AdSense";
 
 function HomePage() {
   return (
@@ -39,6 +40,9 @@ function HomePage() {
       />
       <HeroCarousel />
       <Collections />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <AdSense />
+      </div>
       <Occasions />
       <FeaturesSection />
       {/* <ContactSection /> */}
