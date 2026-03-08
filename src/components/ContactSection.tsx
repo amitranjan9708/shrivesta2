@@ -53,7 +53,7 @@ export function ContactSection() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold bg-gradient-to-r from-amber-300 to-yellow-400 bg-clip-text text-transparent">Call Us</h3>
-                  <p className="text-gray-300 text-lg font-light">+91 98765 43210</p>
+                  <p className="text-gray-300 text-lg font-light">+91 9509552764</p>
                 </div>
               </div>
 
@@ -63,7 +63,7 @@ export function ContactSection() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold bg-gradient-to-r from-amber-300 to-yellow-400 bg-clip-text text-transparent">Email</h3>
-                  <p className="text-gray-300 text-lg font-light">hello@cottonelite.com</p>
+                  <p className="text-gray-300 text-lg font-light">shrivestastore@gmail.com</p>
                 </div>
               </div>
 
@@ -73,7 +73,7 @@ export function ContactSection() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold bg-gradient-to-r from-amber-300 to-yellow-400 bg-clip-text text-transparent">Visit Us</h3>
-                  <p className="text-gray-300 text-lg font-light">Jaipur, Rajasthan, India</p>
+                  <p className="text-gray-300 text-lg font-light">Gaya , Bihar, India</p>
                 </div>
               </div>
             </div>
@@ -83,13 +83,15 @@ export function ContactSection() {
               <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-300 to-yellow-400 bg-clip-text text-transparent tracking-tight">Follow & Connect</h3>
               <div className="flex flex-col sm:flex-row gap-4">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-3"
-                  >
-                    <Instagram className="h-5 w-5" />
-                    <span>Follow on Instagram</span>
-                  </Button>
+                  <a href="https://www.instagram.com/shrivesta.store" target="_blank" rel="noopener noreferrer">
+                    <Button 
+                      size="lg" 
+                      className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-3"
+                    >
+                      <Instagram className="h-5 w-5" />
+                      <span>Follow on Instagram</span>
+                    </Button>
+                  </a>
                 </motion.div>
 
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -133,13 +135,13 @@ export function ContactSection() {
                 </p>
                 
                 <div className="flex justify-center space-x-6 text-sm text-gray-400">
-                  <div className="flex items-center space-x-2">
+                  <a href="https://www.instagram.com/shrivesta.store" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 hover:text-amber-300 transition-colors">
                     <Instagram className="h-4 w-4" />
-                    <span>@cottonelite</span>
-                  </div>
+                    <span>@shrivesta.store</span>
+                  </a>
                   <div className="flex items-center space-x-2">
                     <MessageCircle className="h-4 w-4" />
-                    <span>+91 98765 43210</span>
+                    <span>+91 9509552764</span>
                   </div>
                 </div>
               </CardContent>
@@ -175,10 +177,10 @@ export function ContactSection() {
             >
               <Heart className="h-5 w-5 text-red-400 fill-current" />
             </motion.div>
-            <span>in Rajasthan</span>
+            <span>in Bihar</span>
           </div>
           <p className="mt-2 text-sm text-gray-400">
-            © 2024 Cotton Elite. All rights reserved.
+            © 2026 Shrivesta India. All rights reserved.
           </p>
         </motion.div>
       </div>
