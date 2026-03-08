@@ -356,10 +356,12 @@ class ApiService {
   }
 
   // Cart endpoints
-  async addToCart(productId: string, quantity: number = 1) {
+  async addToCart(productId: string, quantity: number = 1, size?: string | null) {
+    const body: { productId: string; quantity: number; size?: string } = { productId, quantity };
+    if (size != null && size !== "") body.size = size;
     return this.request("/cart", {
       method: "POST",
-      body: JSON.stringify({ productId, quantity }),
+      body: JSON.stringify(body),
     });
   }
 
@@ -367,10 +369,12 @@ class ApiService {
     return this.request("/cart");
   }
 
-  async updateCartItem(productId: string, quantity: number) {
+  async updateCartItem(productId: string, quantity: number, size?: string | null) {
+    const body: { quantity: number; size?: string | null } = { quantity };
+    if (size !== undefined) body.size = size;
     return this.request(`/cart/${productId}`, {
       method: "PUT",
-      body: JSON.stringify({ quantity }),
+      body: JSON.stringify(body),
     });
   }
 
@@ -421,16 +425,31 @@ class ApiService {
     });
   }
 
+  /** Public: whether online payment (Stripe) is enabled. When false, only COD is available. */
+  async getPaymentConfig() {
+    return this.request<{ enableOnlinePayment: boolean }>("/payment/config", {
+      method: "GET",
+    });
+  }
+
   // Order endpoints
   async createOrder(orderData: {
     shippingAddress: string;
     pincode: string;
     paymentMethod: string;
-    paymentIntentId: string;
+    paymentIntentId?: string;
   }) {
+    const body: Record<string, unknown> = {
+      shippingAddress: orderData.shippingAddress,
+      pincode: orderData.pincode,
+      paymentMethod: orderData.paymentMethod,
+    };
+    if (orderData.paymentIntentId) {
+      body.paymentIntentId = orderData.paymentIntentId;
+    }
     return this.request("/orders", {
       method: "POST",
-      body: JSON.stringify(orderData),
+      body: JSON.stringify(body),
     });
   }
 

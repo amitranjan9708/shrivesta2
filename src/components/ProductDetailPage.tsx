@@ -4,6 +4,8 @@ import { apiService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { Check } from "lucide-react";
 
+const ALL_SIZES = ["S", "M", "L", "XL", "XXL", "FREE"] as const;
+
 interface Product {
   id: number;
   product: string;
@@ -15,6 +17,7 @@ interface Product {
   subcategory: string;
   imageUrls: string[];
   imagePublicIds: string[];
+  availableSizes?: string[];
   name?: string;
   description?: string;
 }
@@ -48,6 +51,7 @@ export default function ProductDetailCard() {
   const [pincode, setPincode] = useState("");
   const [isDeliverable, setIsDeliverable] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
@@ -69,6 +73,7 @@ export default function ProductDetailCard() {
         if (response.success && response.data) {
           const productData = response.data as { product: Product };
           setProduct(productData.product);
+          setSelectedSize(null);
 
           // ✅ Always show the first image by default
           if (productData.product.imageUrls?.length > 0) {
@@ -131,6 +136,9 @@ export default function ProductDetailCard() {
     }
   }, [id, product, isAuthenticated]);
 
+  const hasSizes = product && Array.isArray(product.availableSizes) && product.availableSizes.length > 0;
+  const requiresSize = !!hasSizes;
+
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
       navigate("/login");
@@ -139,22 +147,23 @@ export default function ProductDetailCard() {
 
     if (!product) return;
 
+    if (requiresSize && !selectedSize) {
+      alert("Please select a size.");
+      return;
+    }
+
     try {
       setAddingToCart(true);
-      console.log("Adding to cart - productId:", product.id, "quantity:", quantity);
-      const response = await apiService.addToCart(product.id.toString(), quantity);
-      console.log("Add to cart response:", response);
-      
+      const response = await apiService.addToCart(
+        product.id.toString(),
+        quantity,
+        selectedSize ?? undefined
+      );
       if (response.success) {
-        // Show success message
         alert("Product added to cart successfully!");
-        // Refresh cart count in header (will happen automatically via Header's useEffect)
-        // Optionally navigate to cart
-        // navigate("/cart");
       } else {
         const errorMsg = response.error || (response.data as any)?.message || "Failed to add product to cart";
         alert(errorMsg);
-        console.error("Add to cart error:", response);
       }
     } catch (err) {
       console.error("Add to cart error:", err);
@@ -923,6 +932,43 @@ export default function ProductDetailCard() {
               </div>
             </div>
 
+            {/* Size Selector - when product has available sizes from DB */}
+            {product && (product.availableSizes?.length ?? 0) > 0 && (
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "500", marginBottom: "8px", color: "#374151" }}>
+                  Select Size
+                </label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {ALL_SIZES.map((size) => {
+                    const available = product.availableSizes!.includes(size);
+                    const selected = selectedSize === size;
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        disabled={!available}
+                        onClick={() => available && setSelectedSize(size)}
+                        style={{
+                          minWidth: "44px",
+                          height: "44px",
+                          padding: "0 12px",
+                          border: selected ? "2px solid #F59E0B" : "1px solid #d1d5db",
+                          borderRadius: "6px",
+                          background: selected ? "#FEF3C7" : available ? "#fff" : "#f3f4f6",
+                          color: available ? (selected ? "#92400e" : "#374151") : "#9ca3af",
+                          fontSize: "13px",
+                          fontWeight: 500,
+                          cursor: available ? "pointer" : "not-allowed",
+                        }}
+                      >
+                        {size === "FREE" ? "Free Size" : size}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Quantity Selector */}
             <div style={{ marginBottom: "16px" }} className="quantity-selector">
               <label style={{ display: "block", fontSize: "14px", fontWeight: "500", marginBottom: "8px", color: "#374151" }}>
@@ -1104,9 +1150,17 @@ export default function ProductDetailCard() {
                     return;
                   }
                   if (!product) return;
+                  if (requiresSize && !selectedSize) {
+                    alert("Please select a size.");
+                    return;
+                  }
                   try {
                     setAddingToCart(true);
-                    const response = await apiService.addToCart(product.id.toString(), quantity);
+                    const response = await apiService.addToCart(
+                      product.id.toString(),
+                      quantity,
+                      selectedSize ?? undefined
+                    );
                     if (response.success) {
                       navigate("/checkout");
                     } else {

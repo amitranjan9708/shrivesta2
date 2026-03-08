@@ -218,6 +218,9 @@ export function CheckoutPage() {
   const [addressLoading, setAddressLoading] = useState(true);
   const [savedAddress, setSavedAddress] = useState<string | null>(null);
   const [savedPincode, setSavedPincode] = useState<string | null>(null);
+  const [enableOnlinePayment, setEnableOnlinePayment] = useState(false);
+  const [paymentConfigLoaded, setPaymentConfigLoaded] = useState(false);
+  const [placingCodOrder, setPlacingCodOrder] = useState(false);
   const addressFetchedRef = useRef(false);
 
   // Handle payment success callback from Stripe Checkout
@@ -413,8 +416,23 @@ export function CheckoutPage() {
       }
     };
 
+    const fetchPaymentConfig = async () => {
+      try {
+        const res = await apiService.getPaymentConfig();
+        if (res.success && res.data) {
+          const data = res.data as { enableOnlinePayment?: boolean };
+          setEnableOnlinePayment(!!data.enableOnlinePayment);
+        }
+      } catch (_) {
+        setEnableOnlinePayment(false);
+      } finally {
+        setPaymentConfigLoaded(true);
+      }
+    };
+
     fetchCart();
     fetchShippingAddress();
+    fetchPaymentConfig();
   }, [isAuthenticated, authLoading, navigate]);
 
   // Debug effect to track address state changes
@@ -430,6 +448,44 @@ export function CheckoutPage() {
 
   const handlePaymentError = (error: string) => {
     alert(`Payment Error: ${error}`);
+  };
+
+  const handlePlaceCodOrder = async () => {
+    if (!shippingAddress || pincode.length !== 6) return;
+    setPlacingCodOrder(true);
+    try {
+      if (shippingAddress !== savedAddress || pincode !== savedPincode) {
+        try {
+          await apiService.updateShippingAddress(shippingAddress, pincode);
+        } catch (_) {}
+      }
+      const orderResponse = await apiService.createOrder({
+        shippingAddress,
+        pincode,
+        paymentMethod: "COD",
+      });
+      if (orderResponse.success && orderResponse.data) {
+        const orderData = orderResponse.data as any;
+        const order = orderData.order || orderData;
+        localStorage.removeItem("pendingShippingAddress");
+        localStorage.removeItem("pendingPincode");
+        window.dispatchEvent(new CustomEvent("cart-cleared"));
+        navigate(`/order-confirmation/${order.id}`, {
+          state: { orderNumber: order.orderNumber },
+        });
+      } else {
+        alert(
+          orderResponse.error ||
+            orderResponse.message ||
+            "Failed to place order. Please try again."
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Failed to place order. Please try again.");
+    } finally {
+      setPlacingCodOrder(false);
+    }
   };
 
   // Show loading while auth is checking or cart is loading
@@ -539,16 +595,55 @@ export function CheckoutPage() {
               {/* Payment Section - Desktop Only */}
               {!addressLoading && shippingAddress && pincode.length === 6 ? (
                 <div className="mb-6 hidden md:block w-full">
-                  <PaymentButton
-                    amount={totalAmount}
-                    shippingAddress={shippingAddress}
-                    pincode={pincode}
-                    customerEmail={user?.email}
-                    customerName={user?.name}
-                    savedAddress={savedAddress}
-                    savedPincode={savedPincode}
-                    onError={handlePaymentError}
-                  />
+                  {paymentConfigLoaded && enableOnlinePayment ? (
+                    <PaymentButton
+                      amount={totalAmount}
+                      shippingAddress={shippingAddress}
+                      pincode={pincode}
+                      customerEmail={user?.email}
+                      customerName={user?.name}
+                      savedAddress={savedAddress}
+                      savedPincode={savedPincode}
+                      onError={handlePaymentError}
+                    />
+                  ) : paymentConfigLoaded && !enableOnlinePayment ? (
+                    <div className="space-y-4 w-full">
+                      <p className="text-sm text-gray-600" style={{ fontSize: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
+                        Pay when your order is delivered (Cash on Delivery).
+                      </p>
+                      <Button
+                        type="button"
+                        onClick={handlePlaceCodOrder}
+                        disabled={placingCodOrder}
+                        className="w-full flex items-center justify-center gap-2"
+                        style={{
+                          background: placingCodOrder ? 'linear-gradient(to right, #d1d5db, #9ca3af)' : 'linear-gradient(to right, #F59E0B, #FBBF24)',
+                          color: placingCodOrder ? '#666' : '#000',
+                          padding: '16px 24px',
+                          borderRadius: '9999px',
+                          fontSize: '14px',
+                          fontWeight: 500,
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                        }}
+                      >
+                        {placingCodOrder ? (
+                          <>
+                            <Loader className="h-5 w-5 animate-spin" />
+                            Placing Order...
+                          </>
+                        ) : (
+                          <>Place Order (Cash on Delivery)</>
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <Loader className="h-5 w-5 animate-spin" />
+                      <span className="text-sm">Loading payment options...</span>
+                    </div>
+                  )}
                 </div>
               ) : !addressLoading ? (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 hidden md:block w-full">
@@ -610,16 +705,50 @@ export function CheckoutPage() {
       {/* Mobile Sticky Payment Button */}
       {!addressLoading && shippingAddress && pincode.length === 6 && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50 p-4">
-          <PaymentButton
-            amount={totalAmount}
-            shippingAddress={shippingAddress}
-            pincode={pincode}
-            customerEmail={user?.email}
-            customerName={user?.name}
-            savedAddress={savedAddress}
-            savedPincode={savedPincode}
-            onError={handlePaymentError}
-          />
+          {paymentConfigLoaded && enableOnlinePayment ? (
+            <PaymentButton
+              amount={totalAmount}
+              shippingAddress={shippingAddress}
+              pincode={pincode}
+              customerEmail={user?.email}
+              customerName={user?.name}
+              savedAddress={savedAddress}
+              savedPincode={savedPincode}
+              onError={handlePaymentError}
+            />
+          ) : paymentConfigLoaded && !enableOnlinePayment ? (
+            <Button
+              type="button"
+              onClick={handlePlaceCodOrder}
+              disabled={placingCodOrder}
+              className="w-full flex items-center justify-center gap-2"
+              style={{
+                background: placingCodOrder ? 'linear-gradient(to right, #d1d5db, #9ca3af)' : 'linear-gradient(to right, #F59E0B, #FBBF24)',
+                color: placingCodOrder ? '#666' : '#000',
+                padding: '16px 24px',
+                borderRadius: '9999px',
+                fontSize: '14px',
+                fontWeight: 500,
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              {placingCodOrder ? (
+                <>
+                  <Loader className="h-5 w-5 animate-spin" />
+                  Placing Order...
+                </>
+              ) : (
+                <>Place Order (Cash on Delivery)</>
+              )}
+            </Button>
+          ) : (
+            <div className="flex items-center justify-center gap-2 py-2 text-gray-500">
+              <Loader className="h-5 w-5 animate-spin" />
+              <span className="text-sm">Loading payment options...</span>
+            </div>
+          )}
         </div>
       )}
     </div>

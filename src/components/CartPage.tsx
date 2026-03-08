@@ -431,19 +431,32 @@ export function CartPage() {
             </p>
             
             {/* Debug Info */}
-            <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left max-w-md mx-auto">
-              <p className="text-sm font-semibold mb-2">Debug Info:</p>
-              <p className="text-xs text-gray-600">Cart Items Count: {cartItems.length}</p>
-              <p className="text-xs text-gray-600">Loading: {loading ? "Yes" : "No"}</p>
-              <p className="text-xs text-gray-600">Error: {error || "None"}</p>
-              <p className="text-xs text-gray-600">Authenticated: {isAuthenticated ? "Yes" : "No"}</p>
+            {/* align in center */}
               <button
                 onClick={refreshCart}
                 className="mt-4 px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600 text-sm"
+                style={{
+                  background: 'linear-gradient(to right, #F59E0B, #FBBF24)',
+                  color: '#000',
+                  padding: '16px 32px',
+                  borderRadius: '9999px',
+                  fontSize: '1.125rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  margin: '0 100',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 12px 20px rgba(0,0,0,0.3)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.2)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
               >
                 Refresh Cart
               </button>
-            </div>
+    
             
             <Link to="/products">
               <Button className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-3 rounded-lg">
