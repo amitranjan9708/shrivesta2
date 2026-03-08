@@ -66,6 +66,8 @@ interface Product {
   subcategory: string;
   imageUrls: string[];
   imagePublicIds?: string[];
+  availableSizes?: string[] | null;
+  sizes?: string[] | null;
   name?: string;
   description?: string;
 }
@@ -358,7 +360,10 @@ const Products = () => {
             <div className={`products-grid flex flex-wrap gap-6 md:flex md:flex-wrap md:gap-6 ${
               isFilterOpen ? "justify-center lg:justify-start" : "justify-center"
             }`}>
-        {products.map((product) => (
+        {products.map((product) => {
+          const sizes = product.availableSizes ?? product.sizes;
+          const outOfStock = sizes == null || (Array.isArray(sizes) && sizes.length === 0);
+          return (
           <Link
             to={`/products/${product.id}`}
             key={product.id}
@@ -375,9 +380,10 @@ const Products = () => {
               rating={product.rating}
               ratingCount={product.ratingCount}
               subcategory={product.subcategory}
+              outOfStock={outOfStock}
             />
           </Link>
-        ))}
+        );})}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center min-h-[400px] text-center">

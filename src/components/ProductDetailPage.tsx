@@ -17,7 +17,9 @@ interface Product {
   subcategory: string;
   imageUrls: string[];
   imagePublicIds: string[];
+  /** From API: availableSizes (Prisma) or sizes (legacy) */
   availableSizes?: string[];
+  sizes?: string[];
   name?: string;
   description?: string;
 }
@@ -136,8 +138,13 @@ export default function ProductDetailCard() {
     }
   }, [id, product, isAuthenticated]);
 
-  const hasSizes = product && Array.isArray(product.availableSizes) && product.availableSizes.length > 0;
-  const requiresSize = !!hasSizes;
+  // Dynamic from DB: if API sends availableSizes/sizes (even []), use it; only if field is missing, show all as available
+  const rawSizes = product?.availableSizes ?? product?.sizes;
+  const effectiveSizes =
+    rawSizes !== undefined
+      ? (Array.isArray(rawSizes) ? rawSizes : [])
+      : [...ALL_SIZES];
+  const requiresSize = effectiveSizes.length > 0; // require selection only when at least one size is available
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -932,15 +939,15 @@ export default function ProductDetailCard() {
               </div>
             </div>
 
-            {/* Size Selector - when product has available sizes from DB */}
-            {product && (product.availableSizes?.length ?? 0) > 0 && (
+            {/* Size Selector - dynamic from DB: available = normal button, unavailable = grey + strikethrough */}
+            {product && (
               <div style={{ marginBottom: "16px" }}>
                 <label style={{ display: "block", fontSize: "14px", fontWeight: "500", marginBottom: "8px", color: "#374151" }}>
                   Select Size
                 </label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   {ALL_SIZES.map((size) => {
-                    const available = product.availableSizes!.includes(size);
+                    const available = effectiveSizes.includes(size);
                     const selected = selectedSize === size;
                     return (
                       <button
@@ -952,13 +959,15 @@ export default function ProductDetailCard() {
                           minWidth: "44px",
                           height: "44px",
                           padding: "0 12px",
-                          border: selected ? "2px solid #F59E0B" : "1px solid #d1d5db",
+                          border: selected ? "2px solid #F59E0B" : available ? "1px solid #d1d5db" : "1px solid #e5e7eb",
                           borderRadius: "6px",
-                          background: selected ? "#FEF3C7" : available ? "#fff" : "#f3f4f6",
+                          background: selected ? "#FEF3C7" : available ? "#fff" : "#e5e7eb",
                           color: available ? (selected ? "#92400e" : "#374151") : "#9ca3af",
                           fontSize: "13px",
                           fontWeight: 500,
                           cursor: available ? "pointer" : "not-allowed",
+                          textDecoration: available ? "none" : "line-through",
+                          opacity: available ? 1 : 0.85,
                         }}
                       >
                         {size === "FREE" ? "Free Size" : size}

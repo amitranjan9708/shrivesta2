@@ -63,6 +63,7 @@ function PaymentButton({
   amount,
   shippingAddress,
   pincode,
+  shippingAddressForSave,
   customerEmail,
   customerName,
   savedAddress,
@@ -72,6 +73,7 @@ function PaymentButton({
   amount: number;
   shippingAddress: string;
   pincode: string;
+  shippingAddressForSave?: string;
   customerEmail?: string;
   customerName?: string;
   savedAddress?: string | null;
@@ -83,7 +85,7 @@ function PaymentButton({
 
   const handlePayment = async () => {
     if (!shippingAddress || pincode.length !== 6) {
-      setError("Please fill in shipping address and pincode");
+      setError("Please fill in all delivery address fields");
       return;
     }
 
@@ -91,17 +93,15 @@ function PaymentButton({
     setError(null);
 
     try {
-      // Save shipping address and pincode to user's profile if they're different from saved values
-      if (shippingAddress !== savedAddress || pincode !== savedPincode) {
+      const addressToSave = shippingAddressForSave ?? shippingAddress;
+      if (addressToSave !== savedAddress || pincode !== savedPincode) {
         try {
-          await apiService.updateShippingAddress(shippingAddress, pincode);
+          await apiService.updateShippingAddress(addressToSave, pincode);
         } catch (error) {
           console.error("Error saving shipping address and pincode:", error);
-          // Continue with payment even if address save fails
         }
       }
 
-      // Save shipping address and pincode to localStorage before redirecting
       localStorage.setItem("pendingShippingAddress", shippingAddress);
       localStorage.setItem("pendingPincode", pincode);
 
@@ -212,8 +212,6 @@ export function CheckoutPage() {
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const [cartData, setCartData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [shippingAddress, setShippingAddress] = useState("");
-  const [pincode, setPincode] = useState("");
   const [totalAmount, setTotalAmount] = useState(0);
   const [addressLoading, setAddressLoading] = useState(true);
   const [savedAddress, setSavedAddress] = useState<string | null>(null);
@@ -222,6 +220,39 @@ export function CheckoutPage() {
   const [paymentConfigLoaded, setPaymentConfigLoaded] = useState(false);
   const [placingCodOrder, setPlacingCodOrder] = useState(false);
   const addressFetchedRef = useRef(false);
+
+  // Full delivery address form (professional)
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [pincode, setPincode] = useState("");
+
+  // Build single shipping address string for API from form fields
+  const buildShippingAddress = () => {
+    const parts = [fullName.trim(), phone.trim(), addressLine1.trim()];
+    if (addressLine2.trim()) parts.push(addressLine2.trim());
+    parts.push(city.trim(), state.trim());
+    return parts.join(", ") + " - " + pincode.trim();
+  };
+
+  const getAddressErrors = (): string[] => {
+    const errs: string[] = [];
+    if (fullName.trim().length < 2) errs.push("Full name (min 2 characters)");
+    const phoneDigits = phone.replace(/\D/g, "").slice(-10);
+    if (phoneDigits.length !== 10) errs.push("Mobile (10 digits)");
+    else if (!/^[6-9]/.test(phoneDigits)) errs.push("Mobile (must start with 6, 7, 8 or 9)");
+    if (addressLine1.trim().length < 3) errs.push("Address line 1 (min 3 characters)");
+    if (city.trim().length < 2) errs.push("City");
+    if (state.trim().length < 2) errs.push("State");
+    const pin = pincode.replace(/\D/g, "");
+    if (pin.length !== 6) errs.push("Pincode (6 digits)");
+    return errs;
+  };
+
+  const isAddressComplete = () => getAddressErrors().length === 0;
 
   // Handle payment success callback from Stripe Checkout
   useEffect(() => {
@@ -376,31 +407,28 @@ export function CheckoutPage() {
           console.log("Address is undefined?", address === undefined);
           
           if (address !== undefined && address !== null && typeof address === 'string') {
-            // Address exists and is a string
-            console.log("✅ Address found! Setting state...");
             setSavedAddress(address);
-            
-            // Only set shippingAddress if address is not empty after trimming
             if (address.trim().length > 0) {
-              console.log("✅ Setting shippingAddress state to:", address);
-              setShippingAddress(address);
-              console.log("✅ Shipping address state updated");
-            } else {
-              console.log("⚠️ Address is empty string, not setting");
+              const lines = address.trim().split("\n");
+              if (lines.length >= 6) {
+                setFullName(lines[0] || "");
+                setPhone(lines[1] || "");
+                setAddressLine1(lines[2] || "");
+                setAddressLine2(lines[3] || "");
+                setCity(lines[4] || "");
+                setState(lines[5] || "");
+              } else {
+                setAddressLine1(address.trim());
+              }
             }
           } else {
-            console.log("❌ No saved address found for user (address value:", address, ", type:", typeof address, ")");
             setSavedAddress(null);
           }
 
-          // Handle pincode separately
           if (pincode !== undefined && pincode !== null && typeof pincode === 'string' && pincode.trim().length === 6) {
-            console.log("✅ Pincode found! Setting state...");
             setSavedPincode(pincode);
-            setPincode(pincode);
-            console.log("✅ Pincode state updated:", pincode);
+            setPincode(pincode.trim());
           } else {
-            console.log("❌ No saved pincode found for user (pincode value:", pincode, ", type:", typeof pincode, ")");
             setSavedPincode(null);
           }
         } else {
@@ -435,10 +463,9 @@ export function CheckoutPage() {
     fetchPaymentConfig();
   }, [isAuthenticated, authLoading, navigate]);
 
-  // Debug effect to track address state changes
-  useEffect(() => {
-    console.log("Address state changed - shippingAddress:", shippingAddress, "savedAddress:", savedAddress);
-  }, [shippingAddress, savedAddress]);
+  // Build address for save (newline-separated for parsing when loading)
+  const buildShippingAddressForSave = () =>
+    [fullName.trim(), phone.trim(), addressLine1.trim(), addressLine2.trim(), city.trim(), state.trim()].join("\n");
 
   const handlePaymentSuccess = (orderId: number, orderNumber: string) => {
     navigate(`/order-confirmation/${orderId}`, {
@@ -451,16 +478,17 @@ export function CheckoutPage() {
   };
 
   const handlePlaceCodOrder = async () => {
-    if (!shippingAddress || pincode.length !== 6) return;
+    if (!isAddressComplete()) return;
     setPlacingCodOrder(true);
     try {
-      if (shippingAddress !== savedAddress || pincode !== savedPincode) {
+      const addressToSave = buildShippingAddressForSave();
+      if (addressToSave !== savedAddress || pincode !== savedPincode) {
         try {
-          await apiService.updateShippingAddress(shippingAddress, pincode);
+          await apiService.updateShippingAddress(addressToSave, pincode);
         } catch (_) {}
       }
       const orderResponse = await apiService.createOrder({
-        shippingAddress,
+        shippingAddress: buildShippingAddress(),
         pincode,
         paymentMethod: "COD",
       });
@@ -559,66 +587,140 @@ export function CheckoutPage() {
                   </div>
                 ) : (
                   <div className="space-y-4 md:space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2 md:block md:text-sm md:font-medium md:text-gray-700 md:mb-2" style={{ fontSize: '12px', fontWeight: '400', color: '#1a1a1a', marginBottom: '8px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
-                        Address {savedAddress && <span style={{ color: '#059669', fontSize: '11px' }}>(Pre-filled)</span>}
-                      </label>
-                      <textarea
-                        value={shippingAddress}
-                        onChange={(e) => setShippingAddress(e.target.value)}
-                        placeholder="Enter your complete address"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent md:w-full md:px-4 md:py-2 md:border md:border-gray-300 md:rounded-lg"
-                        rows={4}
-                        required
-                        style={{ fontSize: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                          Full name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          placeholder="e.g. Rahul Sharma"
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          style={{ fontSize: '14px' }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                          Mobile number <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                          placeholder="10-digit number"
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          maxLength={10}
+                          style={{ fontSize: '14px' }}
+                        />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2 md:block md:text-sm md:font-medium md:text-gray-700 md:mb-2" style={{ fontSize: '12px', fontWeight: '400', color: '#1a1a1a', marginBottom: '8px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
-                        Pincode {savedPincode && <span style={{ color: '#059669', fontSize: '11px' }}>(Pre-filled)</span>}
+                      <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                        Address line 1 <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
-                        value={pincode}
-                        onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        placeholder="Enter 6-digit pincode"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent md:w-full md:px-4 md:py-2 md:border md:border-gray-300 md:rounded-lg"
-                        maxLength={6}
-                        required
-                        style={{ fontSize: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
+                        value={addressLine1}
+                        onChange={(e) => setAddressLine1(e.target.value)}
+                        placeholder="House/Flat no., Building, Street, Area"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        style={{ fontSize: '14px' }}
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                        Address line 2 <span className="text-gray-400">(optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={addressLine2}
+                        onChange={(e) => setAddressLine2(e.target.value)}
+                        placeholder="Landmark, Locality"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        style={{ fontSize: '14px' }}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                          City / Town <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          placeholder="e.g. Mumbai"
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          style={{ fontSize: '14px' }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                          State <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={state}
+                          onChange={(e) => setState(e.target.value)}
+                          placeholder="e.g. Maharashtra"
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          style={{ fontSize: '14px' }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                          Pincode <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={pincode}
+                          onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          placeholder="6-digit pincode"
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          maxLength={6}
+                          style={{ fontSize: '14px' }}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Payment Section - Desktop Only */}
-              {!addressLoading && shippingAddress && pincode.length === 6 ? (
+              {/* Payment Section - Desktop: always show proceed button; disabled until address complete */}
+              {!addressLoading && (
                 <div className="mb-6 hidden md:block w-full">
-                  {paymentConfigLoaded && enableOnlinePayment ? (
+                  {paymentConfigLoaded && enableOnlinePayment && isAddressComplete() ? (
                     <PaymentButton
                       amount={totalAmount}
-                      shippingAddress={shippingAddress}
+                      shippingAddress={buildShippingAddress()}
                       pincode={pincode}
+                      shippingAddressForSave={buildShippingAddressForSave()}
                       customerEmail={user?.email}
                       customerName={user?.name}
                       savedAddress={savedAddress}
                       savedPincode={savedPincode}
                       onError={handlePaymentError}
                     />
-                  ) : paymentConfigLoaded && !enableOnlinePayment ? (
+                  ) : (
                     <div className="space-y-4 w-full">
                       <p className="text-sm text-gray-600" style={{ fontSize: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
                         Pay when your order is delivered (Cash on Delivery).
                       </p>
+                      {!isAddressComplete() && getAddressErrors().length > 0 && (
+                        <p className="text-sm text-amber-700" style={{ fontSize: '12px' }}>
+                          Add or fix: {getAddressErrors().join(", ")}
+                        </p>
+                      )}
                       <Button
                         type="button"
                         onClick={handlePlaceCodOrder}
-                        disabled={placingCodOrder}
+                        disabled={placingCodOrder || !isAddressComplete()}
                         className="w-full flex items-center justify-center gap-2"
                         style={{
-                          background: placingCodOrder ? 'linear-gradient(to right, #d1d5db, #9ca3af)' : 'linear-gradient(to right, #F59E0B, #FBBF24)',
-                          color: placingCodOrder ? '#666' : '#000',
+                          background: placingCodOrder || !isAddressComplete() ? 'linear-gradient(to right, #d1d5db, #9ca3af)' : 'linear-gradient(to right, #F59E0B, #FBBF24)',
+                          color: placingCodOrder || !isAddressComplete() ? '#666' : '#000',
                           padding: '16px 24px',
                           borderRadius: '9999px',
                           fontSize: '14px',
@@ -638,20 +740,9 @@ export function CheckoutPage() {
                         )}
                       </Button>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-gray-500">
-                      <Loader className="h-5 w-5 animate-spin" />
-                      <span className="text-sm">Loading payment options...</span>
-                    </div>
                   )}
                 </div>
-              ) : !addressLoading ? (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 hidden md:block w-full">
-                  <p className="text-sm text-yellow-800" style={{ fontSize: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
-                    Please fill in your shipping address and pincode to proceed with payment.
-                  </p>
-                </div>
-              ) : null}
+              )}
             </div>
           </div>
 
@@ -702,52 +793,53 @@ export function CheckoutPage() {
         </div>
       </div>
 
-      {/* Mobile Sticky Payment Button */}
-      {!addressLoading && shippingAddress && pincode.length === 6 && (
+      {/* Mobile Sticky Payment Button - always visible after address form loads */}
+      {!addressLoading && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50 p-4">
-          {paymentConfigLoaded && enableOnlinePayment ? (
+          {paymentConfigLoaded && enableOnlinePayment && isAddressComplete() ? (
             <PaymentButton
               amount={totalAmount}
-              shippingAddress={shippingAddress}
+              shippingAddress={buildShippingAddress()}
               pincode={pincode}
+              shippingAddressForSave={buildShippingAddressForSave()}
               customerEmail={user?.email}
               customerName={user?.name}
               savedAddress={savedAddress}
               savedPincode={savedPincode}
               onError={handlePaymentError}
             />
-          ) : paymentConfigLoaded && !enableOnlinePayment ? (
-            <Button
-              type="button"
-              onClick={handlePlaceCodOrder}
-              disabled={placingCodOrder}
-              className="w-full flex items-center justify-center gap-2"
-              style={{
-                background: placingCodOrder ? 'linear-gradient(to right, #d1d5db, #9ca3af)' : 'linear-gradient(to right, #F59E0B, #FBBF24)',
-                color: placingCodOrder ? '#666' : '#000',
-                padding: '16px 24px',
-                borderRadius: '9999px',
-                fontSize: '14px',
-                fontWeight: 500,
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              {placingCodOrder ? (
-                <>
-                  <Loader className="h-5 w-5 animate-spin" />
-                  Placing Order...
-                </>
-              ) : (
-                <>Place Order (Cash on Delivery)</>
-              )}
-            </Button>
           ) : (
-            <div className="flex items-center justify-center gap-2 py-2 text-gray-500">
-              <Loader className="h-5 w-5 animate-spin" />
-              <span className="text-sm">Loading payment options...</span>
-            </div>
+            <>
+              {!isAddressComplete() && getAddressErrors().length > 0 && (
+                <p className="text-xs text-amber-700 mb-2 text-center">Add or fix: {getAddressErrors().join(", ")}</p>
+              )}
+              <Button
+                type="button"
+                onClick={handlePlaceCodOrder}
+                disabled={placingCodOrder || !isAddressComplete()}
+                className="w-full flex items-center justify-center gap-2"
+                style={{
+                  background: placingCodOrder || !isAddressComplete() ? 'linear-gradient(to right, #d1d5db, #9ca3af)' : 'linear-gradient(to right, #F59E0B, #FBBF24)',
+                  color: placingCodOrder || !isAddressComplete() ? '#666' : '#000',
+                  padding: '16px 24px',
+                  borderRadius: '9999px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                {placingCodOrder ? (
+                  <>
+                    <Loader className="h-5 w-5 animate-spin" />
+                    Placing Order...
+                  </>
+                ) : (
+                  <>Place Order (Cash on Delivery)</>
+                )}
+              </Button>
+            </>
           )}
         </div>
       )}

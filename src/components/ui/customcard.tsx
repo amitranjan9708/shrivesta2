@@ -8,6 +8,7 @@ type CardProps = {
   rating?: number;
   ratingCount?: number;
   imageUrls?: string[];
+  outOfStock?: boolean;
 };
 
 // Mobile styles for product card
@@ -77,6 +78,7 @@ export const ProductCard: React.FC<CardProps> = ({
   rating = 0,
   ratingCount = 0,
   imageUrls = [],
+  outOfStock = false,
 }) => {
   const [hovered, setHovered] = useState(false);
   const mainImage = imageUrls?.[0] || "/placeholder-image.jpg";
@@ -95,12 +97,39 @@ export const ProductCard: React.FC<CardProps> = ({
           boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
           cursor: "pointer",
           transition: "transform 0.2s ease, box-shadow 0.2s ease",
+          position: "relative",
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
         {/* Image section */}
         <div className="product-card-image-container" style={{ position: "relative", width: "100%", height: "320px" }}>
+          {outOfStock && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "rgba(0,0,0,0.5)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 2,
+              }}
+            >
+              <span
+                style={{
+                  background: "#b91c1c",
+                  color: "#fff",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }}
+              >
+                Out of Stock
+              </span>
+            </div>
+          )}
           <img
             src={hovered ? hoverImage : mainImage}
             alt={product}
