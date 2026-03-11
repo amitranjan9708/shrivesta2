@@ -502,6 +502,40 @@ class ApiService {
     return this.request(`/coupons/${id}`, { method: "DELETE" });
   }
 
+  // Admin order management
+  async adminGetAllOrders(params?: { status?: string; search?: string; page?: number; limit?: number }) {
+    const q = new URLSearchParams();
+    if (params?.status && params.status !== "ALL") q.set("status", params.status);
+    if (params?.search) q.set("search", params.search);
+    if (params?.page) q.set("page", String(params.page));
+    if (params?.limit) q.set("limit", String(params.limit));
+    return this.request(`/admin/orders?${q.toString()}`);
+  }
+
+  async adminGetOrderById(id: number) {
+    return this.request(`/admin/orders/${id}`);
+  }
+
+  async adminUpdateOrderStatus(id: number, status: string) {
+    return this.request(`/admin/orders/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async adminUpdateOrderDelivery(id: number, data: {
+    status?: string;
+    courierPartner?: string;
+    awbNumber?: string;
+    trackingUrl?: string;
+    expectedDeliveryDate?: string;
+  }) {
+    return this.request(`/admin/orders/${id}/delivery`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
   // Order endpoints
   async createOrder(orderData: {
     shippingAddress: string;

@@ -651,7 +651,7 @@ export function OrderConfirmationPage() {
                             href={order.deliveryTracking.trackingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center w-full px-4 py-2.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-sm"
+                            className="inline-flex items-center justify-center w-full px-4 py-2.5 bg-amber-600 text-blue-600 rounded-lg hover:bg-amber-700 transition-colors font-medium text-sm"
                           >
                             Track Package <ArrowRight className="h-4 w-4 ml-2" />
                           </a>

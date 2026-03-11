@@ -25,6 +25,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { AdminProducts } from "./components/admin/AdminProducts";
 import { AdminCoupons } from "./components/admin/AdminCoupons";
+import { AdminOrders } from "./components/admin/AdminOrders";
 import { RequireAdmin } from "./components/admin/RequireAdmin";
 import { VerifyEmailPage } from "./components/VerifyEmailPage";
 import { ResetPasswordPage } from "./components/ResetPasswordPage";
@@ -113,6 +114,14 @@ export default function App() {
               element={
                 <RequireAdmin>
                   <AdminCoupons />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/orders"
+              element={
+                <RequireAdmin>
+                  <AdminOrders />
                 </RequireAdmin>
               }
             />

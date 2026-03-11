@@ -165,6 +165,21 @@ export function AccountDashboard() {
                 Manage Coupons
               </SectionButton>
               <SectionButton 
+                onClick={() => navigate('/admin/orders')}
+                style={{ 
+                  background: 'white',
+                  color: '#f59e0b',
+                  border: '2px solid #f59e0b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <Package size={16} />
+                Manage Orders
+              </SectionButton>
+              <SectionButton 
                 onClick={() => navigate('/admin')}
                 style={{ 
                   background: 'white',
