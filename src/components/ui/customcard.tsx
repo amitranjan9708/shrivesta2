@@ -37,14 +37,24 @@ const productCardMobileStyles = `
       font-size: 13px !important;
       font-weight: 400 !important;
       color: #000000 !important;
-      line-height: 1.4 !important;
+      line-height: 1.35 !important;
       margin-bottom: 4px !important;
+      height: 36px !important;
+      overflow: hidden !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2 !important;
+      -webkit-box-orient: vertical !important;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     }
     .product-card-subtitle {
       font-size: 11px !important;
       color: #666 !important;
       margin-bottom: 6px !important;
+      height: 32px !important;
+      overflow: hidden !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2 !important;
+      -webkit-box-orient: vertical !important;
       font-weight: 400 !important;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     }
@@ -144,24 +154,40 @@ export const ProductCard: React.FC<CardProps> = ({
           />
         </div>
 
-        {/* Info section */}
-        <div style={{ padding: "12px 10px" }}>
-          <div className="product-card-title"
+        {/* Info section - fixed height for title/subtitle so card frame is consistent */}
+        <div style={{ padding: "12px 10px", minHeight: "140px" }}>
+          <div
+            className="product-card-title"
             style={{
               fontWeight: 700,
               fontSize: "18px",
               color: "#222",
               marginBottom: "6px",
+              height: "48px",
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              lineHeight: 1.35,
             }}
+            title={product}
           >
             {product}
           </div>
-          <div className="product-card-subtitle"
+          <div
+            className="product-card-subtitle"
             style={{
               color: "#666",
               fontSize: "14px",
               marginBottom: "8px",
+              height: "40px",
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              lineHeight: 1.35,
             }}
+            title={subtitle}
           >
             {subtitle}
           </div>
