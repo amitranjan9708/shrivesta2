@@ -43,7 +43,8 @@ const checkoutMobileStyles = `
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     }
     .checkout-card input,
-    .checkout-card textarea {
+    .checkout-card textarea,
+    .checkout-card select {
       font-size: 12px !important;
       color: #000000 !important;
       font-weight: 400 !important;
@@ -237,6 +238,11 @@ export function CheckoutPage() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [pincode, setPincode] = useState("");
+
+  // Pincode lookup
+  const [pincodeLoading, setPincodeLoading] = useState(false);
+  const [pincodeError, setPincodeError] = useState<string | null>(null);
+  const [cityOptions, setCityOptions] = useState<string[]>([]);
 
   // Build single shipping address string for API from form fields
   const buildShippingAddress = () => {
@@ -478,6 +484,42 @@ export function CheckoutPage() {
   const buildShippingAddressForSave = () =>
     [fullName.trim(), phone.trim(), addressLine1.trim(), addressLine2.trim(), city.trim(), state.trim()].join("\n");
 
+  // Auto-fetch city and state when pincode is 6 digits
+  useEffect(() => {
+    const pin = pincode.replace(/\D/g, "");
+    if (pin.length !== 6) {
+      setCityOptions([]);
+      setPincodeError(null);
+      return;
+    }
+    const fetchPincodeData = async () => {
+      setPincodeLoading(true);
+      setPincodeError(null);
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+        const data = await res.json();
+        if (data?.[0]?.Status === "Success" && data[0].PostOffice?.length > 0) {
+          const postOffices: any[] = data[0].PostOffice;
+          const fetchedState = postOffices[0].State || "";
+          const district = postOffices[0].Block || postOffices[0].Division || "";
+          setState(fetchedState);
+          setCity(district);
+          setCityOptions([]);
+        } else {
+          setPincodeError("Invalid pincode — no location found");
+          setCityOptions([]);
+          setState("");
+          setCity("");
+        }
+      } catch {
+        setPincodeError("Could not fetch pincode details. Check your connection.");
+      } finally {
+        setPincodeLoading(false);
+      }
+    };
+    fetchPincodeData();
+  }, [pincode]);
+
   const handlePaymentSuccess = (orderId: number, orderNumber: string) => {
     navigate(`/order-confirmation/${orderId}`, {
       state: { orderNumber },
@@ -661,6 +703,66 @@ export function CheckoutPage() {
                         />
                       </div>
                     </div>
+
+                    {/* Pincode first — triggers city & state auto-fill */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                        Pincode <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={pincode}
+                          onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          placeholder="Enter 6-digit pincode"
+                          className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent pr-10 ${pincodeError ? 'border-red-400' : 'border-gray-300'}`}
+                          maxLength={6}
+                          style={{ fontSize: '14px' }}
+                        />
+                        {pincodeLoading && (
+                          <Loader className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-amber-500" />
+                        )}
+                        {!pincodeLoading && cityOptions.length > 0 && (
+                          <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                        )}
+                      </div>
+                      {pincodeError && (
+                        <p className="text-red-500 text-xs mt-1">{pincodeError}</p>
+                      )}
+                    </div>
+
+                    {/* City dropdown + State auto-filled */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                          City / Area <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          placeholder="Auto-filled from pincode"
+                          className={`w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${city ? 'bg-gray-50' : 'bg-white'}`}
+                          style={{ fontSize: '14px' }}
+                          readOnly={pincodeLoading}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                          State <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={state}
+                          onChange={(e) => setState(e.target.value)}
+                          placeholder="Auto-filled from pincode"
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-gray-50"
+                          style={{ fontSize: '14px' }}
+                          readOnly={cityOptions.length > 0}
+                        />
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
                         Address line 1 <span className="text-red-500">*</span>
@@ -686,48 +788,6 @@ export function CheckoutPage() {
                         className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                         style={{ fontSize: '14px' }}
                       />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-                          City / Town <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                          placeholder="e.g. Mumbai"
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                          style={{ fontSize: '14px' }}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-                          State <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={state}
-                          onChange={(e) => setState(e.target.value)}
-                          placeholder="e.g. Maharashtra"
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                          style={{ fontSize: '14px' }}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1" style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-                          Pincode <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={pincode}
-                          onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                          placeholder="6-digit pincode"
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                          maxLength={6}
-                          style={{ fontSize: '14px' }}
-                        />
-                      </div>
                     </div>
                   </div>
                 )}
