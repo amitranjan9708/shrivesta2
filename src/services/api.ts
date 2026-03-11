@@ -332,6 +332,7 @@ class ApiService {
     ratingCount: number;
     subcategory: string;
     images: File[];
+    availableSizes?: string[];
   }) {
     const form = new FormData();
     form.append("product", String(input.product));
@@ -341,6 +342,9 @@ class ApiService {
     form.append("rating", String(input.rating));
     form.append("ratingCount", String(input.ratingCount));
     form.append("subcategory", String(input.subcategory));
+    if (input.availableSizes && input.availableSizes.length > 0) {
+      form.append("availableSizes", input.availableSizes.join(","));
+    }
     input.images.forEach((f) => form.append("images", f));
 
     return this.request("/admin/products", {

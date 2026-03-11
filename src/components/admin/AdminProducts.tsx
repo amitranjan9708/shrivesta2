@@ -27,7 +27,20 @@ export const AdminProducts: React.FC = () => {
     ratingCount: "0",
     subcategory: "",
     images: [] as File[],
+    availableSizes: [] as string[],
   });
+
+  // Size options matching database enum (Size: S, M, L, XL, XXL, FREE)
+  const SIZE_OPTIONS = ["S", "M", "L", "XL", "XXL", "FREE"];
+
+  const toggleSize = (size: string) => {
+    setForm((f) => ({
+      ...f,
+      availableSizes: f.availableSizes.includes(size)
+        ? f.availableSizes.filter((s) => s !== size)
+        : [...f.availableSizes, size],
+    }));
+  };
 
   // Available subcategories in the database
   const allSubcategories = [
@@ -72,10 +85,11 @@ export const AdminProducts: React.FC = () => {
         ratingCount: Number(form.ratingCount),
         subcategory: form.subcategory,
         images: form.images,
+        availableSizes: form.availableSizes,
       };
       const res = await apiService.adminCreateProduct(payload);
       if (res.success) {
-        setForm({ product: "", subtitle: "", oldPrice: "", salePrice: "", rating: "4", ratingCount: "0", subcategory: "", images: [] });
+        setForm({ product: "", subtitle: "", oldPrice: "", salePrice: "", rating: "4", ratingCount: "0", subcategory: "", images: [], availableSizes: [] });
         await refresh();
       } else {
         setError(res.error || "Failed to create product");
@@ -174,6 +188,32 @@ export const AdminProducts: React.FC = () => {
               </option>
             ))}
           </select>
+          <div className="md:col-span-2">
+            <p className="text-sm font-medium text-gray-700 mb-2">Available sizes</p>
+            <div className="flex flex-wrap gap-2">
+              {SIZE_OPTIONS.map((size) => (
+                <label
+                  key={size}
+                  className={`inline-flex items-center px-3 py-2 rounded-lg border-2 cursor-pointer transition-all ${
+                    form.availableSizes.includes(size)
+                      ? "border-amber-500 bg-amber-50 text-amber-800"
+                      : "border-gray-300 bg-white text-gray-600 hover:border-amber-300"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={form.availableSizes.includes(size)}
+                    onChange={() => toggleSize(size)}
+                  />
+                  <span className="text-sm font-medium">{size}</span>
+                </label>
+              ))}
+            </div>
+            {form.availableSizes.length > 0 && (
+              <p className="text-xs text-gray-500 mt-1">Selected: {form.availableSizes.join(", ")}</p>
+            )}
+          </div>
           <div className="flex items-center">
             <label className="block w-full border-2 border-gray-300 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200 rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-all">
               <span className="text-gray-600 text-sm font-medium">Choose Images</span>
