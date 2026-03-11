@@ -45,7 +45,7 @@ function HomePage() {
       </div>
       <Occasions />
       <FeaturesSection />
-      {/* <ContactSection /> */}
+      <ContactSection />
     </>
   );
 }
@@ -114,7 +114,7 @@ export default function App() {
               element={<h1 className="text-center mt-10">Page Not Found</h1>}
             />
           </Routes>
-          <ContactSection />
+
         </div>
       </Router>
     </AuthProvider>

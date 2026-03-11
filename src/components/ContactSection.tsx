@@ -19,7 +19,7 @@ export function ContactSection() {
           className="w-full h-full object-cover"
         />
       </div>
-      
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -32,7 +32,7 @@ export function ContactSection() {
             Connect With Us
           </h2>
           <p className="text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-light">
-            Join our community of <span className="font-semibold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">fashion-forward women</span>. 
+            Join our community of <span className="font-semibold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">fashion-forward women</span>.
             Follow us for style tips, new arrivals, and exclusive offers.
           </p>
         </motion.div>
@@ -84,8 +84,8 @@ export function ContactSection() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <a href="https://www.instagram.com/shrivesta.store" target="_blank" rel="noopener noreferrer">
-                    <Button 
-                      size="lg" 
+                    <Button
+                      size="lg"
                       className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-3"
                     >
                       <Instagram className="h-5 w-5" />
@@ -95,8 +95,8 @@ export function ContactSection() {
                 </motion.div>
 
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-3"
                   >
                     <MessageCircle className="h-5 w-5" />
@@ -118,7 +118,7 @@ export function ContactSection() {
             <Card className="bg-white/10 backdrop-blur-sm border-amber-400/30 shadow-2xl">
               <CardContent className="p-8">
                 <h3 className="text-3xl font-bold mb-8 bg-gradient-to-r from-amber-300 to-yellow-400 bg-clip-text text-transparent tracking-tight">Scan & Connect</h3>
-                
+
                 {/* Mock QR Code */}
                 <div className="bg-white p-6 rounded-xl mx-auto w-fit mb-6">
                   <div className="w-40 h-40 bg-black rounded-lg flex items-center justify-center">
@@ -129,11 +129,11 @@ export function ContactSection() {
                     </div>
                   </div>
                 </div>
-                
+
                 <p className="text-gray-300 text-sm mb-4">
                   Scan for instant access to our WhatsApp catalog
                 </p>
-                
+
                 <div className="flex justify-center space-x-6 text-sm text-gray-400">
                   <a href="https://www.instagram.com/shrivesta.store" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 hover:text-amber-300 transition-colors">
                     <Instagram className="h-4 w-4" />
@@ -157,18 +157,7 @@ export function ContactSection() {
           viewport={{ once: true }}
           className="mt-16 text-center border-t border-amber-400/30 pt-8"
         >
-          <div className="mb-6 flex items-center justify-center gap-4">
-            <Link to="/login">
-              <Button className="px-6 py-2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-black hover:from-amber-600 hover:to-yellow-600">
-                Login
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button variant="outline" className="px-6 py-2 rounded-full border border-amber-300 text-amber-200 hover:bg-amber-50/10">
-                Signup
-              </Button>
-            </Link>
-          </div>
+
           <div className="flex items-center justify-center space-x-2 text-gray-300">
             <span>Made with</span>
             <motion.div
