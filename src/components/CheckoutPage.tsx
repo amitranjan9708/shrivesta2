@@ -68,6 +68,7 @@ function PaymentButton({
   customerName,
   savedAddress,
   savedPincode,
+  couponCode,
   onError,
 }: {
   amount: number;
@@ -78,6 +79,7 @@ function PaymentButton({
   customerName?: string;
   savedAddress?: string | null;
   savedPincode?: string | null;
+  couponCode?: string | null;
   onError: (error: string) => void;
 }) {
   const [processing, setProcessing] = useState(false);
@@ -104,6 +106,8 @@ function PaymentButton({
 
       localStorage.setItem("pendingShippingAddress", shippingAddress);
       localStorage.setItem("pendingPincode", pincode);
+      if (couponCode) localStorage.setItem("pendingCouponCode", couponCode);
+      else localStorage.removeItem("pendingCouponCode");
 
       // Create Stripe Checkout Session
       const response = await apiService.createCheckoutSession({
@@ -220,6 +224,10 @@ export function CheckoutPage() {
   const [paymentConfigLoaded, setPaymentConfigLoaded] = useState(false);
   const [placingCodOrder, setPlacingCodOrder] = useState(false);
   const addressFetchedRef = useRef(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number; finalTotal: number } | null>(null);
+  const [applyingPromo, setApplyingPromo] = useState(false);
 
   // Full delivery address form (professional)
   const [fullName, setFullName] = useState("");
@@ -277,13 +285,15 @@ export function CheckoutPage() {
             const session = sessionData.session || sessionData;
             
             if (session.status === "paid") {
-              // Payment successful, create order
+              const pendingCoupon = localStorage.getItem("pendingCouponCode") || undefined;
               const orderResponse = await apiService.createOrder({
                 shippingAddress: localStorage.getItem("pendingShippingAddress") || "",
                 pincode: localStorage.getItem("pendingPincode") || "",
                 paymentMethod: "card",
                 paymentIntentId: session.payment_intent || session.id || sessionId,
+                couponCode: pendingCoupon || undefined,
               });
+              if (pendingCoupon) localStorage.removeItem("pendingCouponCode");
 
               if (orderResponse.success && orderResponse.data) {
                 const orderData = orderResponse.data as any;
@@ -367,6 +377,7 @@ export function CheckoutPage() {
 
           setCartData({ items, summary: { subtotal, shipping, total } });
           setTotalAmount(total);
+          setAppliedCoupon(null);
         }
       } catch (error) {
         console.error("Error fetching cart:", error);
@@ -477,6 +488,39 @@ export function CheckoutPage() {
     alert(`Payment Error: ${error}`);
   };
 
+  const handleApplyPromo = async () => {
+    const code = promoInput.trim();
+    if (!code) {
+      setPromoError("Enter a promo code");
+      return;
+    }
+    const subtotal = cartData?.summary?.subtotal ?? 0;
+    const shipping = cartData?.summary?.shipping ?? 0;
+    setApplyingPromo(true);
+    setPromoError(null);
+    try {
+      const res = await apiService.validateCoupon(subtotal, shipping, code);
+      if (res.success && res.data) {
+        const d = res.data as { valid?: boolean; discountAmount: number; finalTotal: number; code: string; message?: string };
+        setAppliedCoupon({ code: d.code, discountAmount: d.discountAmount, finalTotal: d.finalTotal });
+        setTotalAmount(d.finalTotal);
+        setPromoInput("");
+      } else {
+        setPromoError(res.error || res.message || "Invalid or expired coupon");
+      }
+    } catch {
+      setPromoError("Could not validate coupon");
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
+
+  const removePromo = () => {
+    setAppliedCoupon(null);
+    setTotalAmount(cartData?.summary?.total ?? 0);
+    setPromoError(null);
+  };
+
   const handlePlaceCodOrder = async () => {
     if (!isAddressComplete()) return;
     setPlacingCodOrder(true);
@@ -491,6 +535,7 @@ export function CheckoutPage() {
         shippingAddress: buildShippingAddress(),
         pincode,
         paymentMethod: "COD",
+        couponCode: appliedCoupon?.code ?? undefined,
       });
       if (orderResponse.success && orderResponse.data) {
         const orderData = orderResponse.data as any;
@@ -701,6 +746,7 @@ export function CheckoutPage() {
                       customerName={user?.name}
                       savedAddress={savedAddress}
                       savedPincode={savedPincode}
+                      couponCode={appliedCoupon?.code ?? undefined}
                       onError={handlePaymentError}
                     />
                   ) : (
@@ -779,6 +825,35 @@ export function CheckoutPage() {
                         {cartData.summary?.shipping === 0 ? 'FREE' : `₹${(cartData.summary?.shipping || 0).toLocaleString()}`}
                       </span>
                     </div>
+                    {appliedCoupon && (
+                      <div className="flex justify-between md:flex md:justify-between text-green-600">
+                        <span style={{ fontSize: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>Discount ({appliedCoupon.code})</span>
+                        <span style={{ fontSize: '12px', fontWeight: '500', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>-₹{appliedCoupon.discountAmount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-2 mt-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Promo code"
+                          value={promoInput}
+                          onChange={(e) => { setPromoInput(e.target.value); setPromoError(null); }}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          style={{ fontSize: '12px' }}
+                          disabled={!!appliedCoupon}
+                        />
+                        {appliedCoupon ? (
+                          <button type="button" onClick={removePromo} className="px-3 py-2 text-amber-600 border border-amber-500 rounded-lg text-sm font-medium whitespace-nowrap">
+                            Remove
+                          </button>
+                        ) : (
+                          <button type="button" onClick={handleApplyPromo} disabled={applyingPromo} className="px-3 py-2 bg-amber-500 text-black rounded-lg text-sm font-medium whitespace-nowrap disabled:opacity-60">
+                            {applyingPromo ? "..." : "Apply"}
+                          </button>
+                        )}
+                      </div>
+                      {promoError && <p className="text-red-600 text-xs">{promoError}</p>}
+                    </div>
                     <div className="border-t border-gray-200 pt-2 md:border-t md:border-gray-200 md:pt-2">
                       <div className="flex justify-between text-lg font-semibold md:flex md:justify-between md:text-lg md:font-semibold">
                         <span style={{ fontSize: '13px', fontWeight: '500', color: '#000', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>Total</span>
@@ -806,6 +881,7 @@ export function CheckoutPage() {
               customerName={user?.name}
               savedAddress={savedAddress}
               savedPincode={savedPincode}
+              couponCode={appliedCoupon?.code ?? undefined}
               onError={handlePaymentError}
             />
           ) : (

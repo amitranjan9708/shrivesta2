@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Package, MapPin, Loader, Settings, Plus, Shield } from 'lucide-react';
+import { User, Mail, Package, MapPin, Loader, Settings, Plus, Shield, Tag } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { AccountLayout } from './AccountLayout';
@@ -148,6 +148,21 @@ export function AccountDashboard() {
               >
                 <Package size={16} />
                 Manage Products
+              </SectionButton>
+              <SectionButton 
+                onClick={() => navigate('/admin/coupons')}
+                style={{ 
+                  background: 'white',
+                  color: '#f59e0b',
+                  border: '2px solid #f59e0b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <Tag size={16} />
+                Manage Coupons
               </SectionButton>
               <SectionButton 
                 onClick={() => navigate('/admin')}

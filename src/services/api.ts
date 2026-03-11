@@ -436,12 +436,79 @@ class ApiService {
     });
   }
 
+  // Coupon / promo code
+  async validateCoupon(subtotal: number, shipping: number, code: string) {
+    return this.request<{
+      valid: boolean;
+      code: string;
+      discountAmount: number;
+      finalTotal: number;
+      message: string;
+    }>("/coupons/validate", {
+      method: "POST",
+      body: JSON.stringify({ subtotal, shipping, code: code.trim() }),
+    });
+  }
+
+  async getCoupons() {
+    type CouponItem = {
+      id: number;
+      code: string;
+      discountType: string;
+      discountValue: number;
+      minOrderAmount: number | null;
+      validFrom: string;
+      validTo: string;
+      maxUses: number | null;
+      usedCount: number;
+      active: boolean;
+    };
+    return this.request<{ coupons: CouponItem[] }>("/coupons", { method: "GET" });
+  }
+
+  async createCoupon(data: {
+    code: string;
+    discountType: "PERCENT" | "FIXED";
+    discountValue: number;
+    minOrderAmount?: number | null;
+    validFrom?: string;
+    validTo?: string;
+    maxUses?: number | null;
+    active?: boolean;
+  }) {
+    return this.request("/coupons", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCoupon(id: number, data: Partial<{
+    code: string;
+    discountType: "PERCENT" | "FIXED";
+    discountValue: number;
+    minOrderAmount: number | null;
+    validFrom: string;
+    validTo: string;
+    maxUses: number | null;
+    active: boolean;
+  }>) {
+    return this.request(`/coupons/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCoupon(id: number) {
+    return this.request(`/coupons/${id}`, { method: "DELETE" });
+  }
+
   // Order endpoints
   async createOrder(orderData: {
     shippingAddress: string;
     pincode: string;
     paymentMethod: string;
     paymentIntentId?: string;
+    couponCode?: string | null;
   }) {
     const body: Record<string, unknown> = {
       shippingAddress: orderData.shippingAddress,
@@ -450,6 +517,9 @@ class ApiService {
     };
     if (orderData.paymentIntentId) {
       body.paymentIntentId = orderData.paymentIntentId;
+    }
+    if (orderData.couponCode) {
+      body.couponCode = orderData.couponCode;
     }
     return this.request("/orders", {
       method: "POST",
