@@ -355,6 +355,35 @@ class ApiService {
     });
   }
 
+  async adminUpdateProduct(
+    id: number,
+    input: {
+      product?: string;
+      subtitle?: string;
+      oldPrice?: number;
+      salePrice?: number;
+      rating?: number;
+      ratingCount?: number;
+      subcategory?: string;
+      availableSizes?: string[];
+      keepImageUrls?: string[];
+      newImages?: File[];
+    }
+  ) {
+    const form = new FormData();
+    if (input.product !== undefined) form.append("product", String(input.product));
+    if (input.subtitle !== undefined) form.append("subtitle", String(input.subtitle));
+    if (input.oldPrice !== undefined) form.append("oldPrice", String(input.oldPrice));
+    if (input.salePrice !== undefined) form.append("salePrice", String(input.salePrice));
+    if (input.rating !== undefined) form.append("rating", String(input.rating));
+    if (input.ratingCount !== undefined) form.append("ratingCount", String(input.ratingCount));
+    if (input.subcategory !== undefined) form.append("subcategory", String(input.subcategory));
+    if (input.availableSizes !== undefined) form.append("availableSizes", input.availableSizes.join(","));
+    if (input.keepImageUrls !== undefined) form.append("keepImageUrls", JSON.stringify(input.keepImageUrls));
+    (input.newImages || []).forEach((f) => form.append("images", f));
+    return this.request(`/admin/products/${id}`, { method: "PUT", body: form, headers: {} });
+  }
+
   async adminGetSalesStats() {
     return this.request("/admin/stats/sales");
   }
