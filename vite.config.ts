@@ -51,7 +51,7 @@ export default defineConfig({
   },
   build: {
     target: "esnext",
-    outDir: "build",
+    outDir: "dist",
   },
   server: {
     port: 3001, // Changed to avoid conflict with backend
